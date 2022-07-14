@@ -1,32 +1,36 @@
 var ingredientInformationListElement = $("#ingredientInformation");
 
 //Products wil have their prices displayed with this amount as the standard ie 100g
-var standardAmountToDisplay = 100;
+var standardWeightToDisplay = 100;
 
 //All products that have had their information extracted and displayed
 var allListedProducts = [];
 
 //A type of product, ie potatoes or apples or bacon
-var productType = 
+class ProductType
 {
-    productType: "",
-    productArray: []
+    constructor(productType, productArray) 
+    {
+        this.productType = productType;
+        this.productArray = productArray;
+    }
 }
 
 //An individual product, ie "Woolworths Washed Potatoes 2kg"
-var product = 
+class Product
 {
-    productName: "",
-    productImageUrl: "",
-    productStockcode: 0,
-
-    originalWeight: 0,
-    isOriginalWeightEstimated: false,
-    originalUnits: "",
-    originalPrice: 0,
-    
-    pricePerGramOrML: 0,
-    normalisedUnit: ""
+    constructor(productName, productImageUrl, productStockcode, originalWeight, isOriginalWeightEstimated, originalUnits, originalPrice, pricePerGramOrML, normalisedUnit) 
+    {
+        this.productName = productName;
+        this.productImageUrl = productImageUrl;
+        this.productStockcode = productStockcode;
+        this.originalWeight = originalWeight;
+        this.isOriginalWeightEstimated = isOriginalWeightEstimated;
+        this.originalUnits = originalUnits;
+        this.originalPrice = originalPrice;
+        this.pricePerGramOrML = pricePerGramOrML;
+        this.normalisedUnit = normalisedUnit;
+    }
 }
 
 function Init()
@@ -87,8 +91,7 @@ function TidyProductName(data, productName)
 
 function ExtractRelevantProductInformationFromAPI(data, productName)
 {
-    let newProductType = Object.create(productType);
-    newProductType.productType = productName;
+    let newProductArray = [];
 
     for (let i = 0; i < data.Products.length; i++)
     {
@@ -96,35 +99,36 @@ function ExtractRelevantProductInformationFromAPI(data, productName)
 
         if (productPath.IsAvailable)
         {
-            let newProduct = Object.create(product);
-
-            newProduct.productName = data.Products[i].DisplayName;
-            newProduct.productImageUrl = productPath.DetailsImagePaths[0];
-            newProduct.productStockcode = productPath.Stockcode;
+            let productName = data.Products[i].DisplayName;
+            let productImageUrl = productPath.DetailsImagePaths[0];
+            let productStockcode = productPath.Stockcode;
 
             //Get the original unit (ie kg, g, ml etc) for each product
-            newProduct.originalUnits = GetProductUnitType(productPath.PackageSize);
+            let originalUnits = GetProductUnitType(productPath.PackageSize);
 
-            //If it wasn't able to parse the original units
-            if (newProduct.originalUnits != "error")
+            //If it was able to parse the original units
+            if (originalUnits != "error")
             {
                 //If the product is fruit or vegetable then its weight may need to be estimated
-                newProduct.isOriginalWeightEstimated = (newProduct.originalUnits === "each" ? true : false);
+                let isOriginalWeightEstimated = (originalUnits === "each" ? true : false);
 
                 //If it is estimated then the units will be in grams, otherwise they might be grams or ml
-                if (newProduct.isOriginalWeightEstimated) newProduct.normalisedUnit = "g";
-                else newProduct.normalisedUnit = GramsOrML(newProduct.originalUnits);
+                let normalisedUnit;
+                if (isOriginalWeightEstimated) normalisedUnit = "g";
+                else normalisedUnit = GramsOrML(originalUnits);
 
                 //Get the original weight for each product
-                newProduct.originalWeight = GetProductWeightWithoutUnits(productPath.PackageSize, newProduct.isOriginalWeightEstimated, productName);
+                let originalWeight = GetProductWeightWithoutUnits(productPath.PackageSize, isOriginalWeightEstimated, productName);
 
-                newProduct.originalPrice = productPath.Price;
+                let originalPrice = productPath.Price;
                 
                 //Make sure none of the original values are null, then try to convert the price into $/gram or $/ml for easy calculation
-                if (newProduct.originalUnits != null && newProduct.originalWeight != null && newProduct.originalPrice != null)
+                if (originalUnits != null && originalWeight != null && originalPrice != null)
                 {
-                    NormalisePrice(newProduct); 
-                    newProductType.productArray.push(newProduct);
+                    let pricePerGramOrML = NormalisePrice(originalWeight, originalUnits, originalPrice);
+
+                    let newProduct = new Product(productName, productImageUrl, productStockcode, originalWeight, isOriginalWeightEstimated, originalUnits, originalPrice, pricePerGramOrML, normalisedUnit);
+                    newProductArray.push(newProduct);
                 }
                 else console.log(data.Products[i].DisplayName + " was removed as either the price or units or the weight were null.");
             }
@@ -132,8 +136,9 @@ function ExtractRelevantProductInformationFromAPI(data, productName)
         else console.log(data.Products[i].DisplayName + " was removed as it is unavailable.");
     }
 
-    if (newProductType.productArray.length > 0)
+    if (newProductArray.length > 0)
     {
+        let newProductType = new ProductType(productName, newProductArray);
         console.log(newProductType);
 
         allListedProducts.push(newProductType);
@@ -202,10 +207,10 @@ function ConvertWeightIntoGramsOrML(weight, packageType)
     if (packageType === "l") return weight * 1000;
 }
 
-function NormalisePrice(product)
+function NormalisePrice(originalWeight, originalUnits, originalPrice)
 {
-    let productWeightInGramsOrML = ConvertWeightIntoGramsOrML(product.originalWeight, product.originalUnits);
-    product.pricePerGramOrML = product.originalPrice / productWeightInGramsOrML;
+    let productWeightInGramsOrML = ConvertWeightIntoGramsOrML(originalWeight, originalUnits);
+    return originalPrice / productWeightInGramsOrML;
 }
 
 function CreateNewProductInformationElements(newProductType)
@@ -216,7 +221,7 @@ function CreateNewProductInformationElements(newProductType)
     CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
     CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
 
-    let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardAmountToDisplay).toFixed(2) + "<p/>");
+    let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
 
     ingredientMeanPriceElement.appendTo(ingredientNameElement);
 
@@ -225,7 +230,7 @@ function CreateNewProductInformationElements(newProductType)
 
 function CreateMinOrMaxPriceElement(isPriceMin, productArray, productArrayIndex, elementToAppendTo)
 {
-    let ingredientPriceElement = $("<p>" + (isPriceMin ? "Min" : "Max") + " price ($/100g): $" + (productArray[productArrayIndex].pricePerGramOrML * standardAmountToDisplay).toFixed(2) + "<p/>");
+    let ingredientPriceElement = $("<p>" + (isPriceMin ? "Min" : "Max") + " price ($/100g): $" + (productArray[productArrayIndex].pricePerGramOrML * standardWeightToDisplay).toFixed(2) + "<p/>");
     let ingredientPriceProductTitleElement = $("<p>" + (productArray[productArrayIndex].productName) + "<p/>");
     let ingredientPriceProductPriceElement = $("<p>$" + (productArray[productArrayIndex].originalPrice) + "<p/>");
     let ingredientPriceProductImageElement = $("<a href=\"https://www.woolworths.com.au/shop/productdetails/" + (productArray[productArrayIndex].productStockcode) + "\" target=\"_blank\" rel=\"noopener noreferrer\"><image src=\"" + (productArray[productArrayIndex].productImageUrl)+"\" alt=\"Image of product\" class=\"previewImage\"></a>");
@@ -271,7 +276,7 @@ function GetMeanPrice(productArray)
 function GetEstimatedWeightOfFruitsAndVegetables(name)
 {
     let nameLowercase = name.toLowerCase();
-    //If plural, remove the plural
+    //If plural, remove the plural, of course if it's a plural es then we're fucked
     if (nameLowercase[nameLowercase.length - 1] === "s") nameLowercase.slice(0, -1);
 
     for (let i = 0; i < fruitAndVegArray.length; i++) 
@@ -280,6 +285,7 @@ function GetEstimatedWeightOfFruitsAndVegetables(name)
     }
 }
 
+//Weights sourced from https://weightofstuff.com/average-weight-of-all-fruits-and-vegetables/
 function AddFruitsAndVegetablesToArray()
 {
     fruitAndVegArray.push(new FruitAndVegObject("apple", 195));
@@ -347,10 +353,13 @@ function AddFruitsAndVegetablesToArray()
 }
 
 var fruitAndVegArray = [];
-function FruitAndVegObject(name, estimatedWeight)
+class FruitAndVegObject 
 {
-    this.name = name;
-    this.estimatedWeight = estimatedWeight;
+    constructor(name, estimatedWeight) 
+    {
+        this.name = name;
+        this.estimatedWeight = estimatedWeight;
+    }
 }
 
 function SaveRecipe()

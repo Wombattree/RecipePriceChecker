@@ -1,5 +1,10 @@
 var ingredientInformationListElement = $("#ingredientInformation");
 
+var addIngredientContainerElement = $("#addIngredientContainer");
+var ingredientQuantitySelectorElement = $("#ingredientQuantitySelector");
+var ingredientUnitySelectorElement = $("#ingredientUnitsSelector");
+var ingredientSearchBoxElement = $("#ingredientSearchBox");
+
 //Products wil have their prices displayed with this amount as the standard ie 100g
 var standardWeightToDisplay = 100;
 
@@ -36,12 +41,71 @@ class Product
 function Init()
 {
     AddFruitsAndVegetablesToArray();
+    CreateNewRecipe();
 }
 
 function IngredientEntered(event)
 {
     //If the event was triggered by the enter key
     if (event.keyCode === 13) SanitiseUserEntry(event);
+}
+
+function AddIngredient()
+{
+    let ingredientQuantity = ingredientQuantitySelectorElement.val();
+    let ingredientUnit = ingredientUnitySelectorElement.val();
+    let ingredientName = ingredientSearchBoxElement.val();
+    ingredientName = GetSanitisedName(ingredientName);
+    let ingredientURLName = GetURLName(ingredientName);
+
+    let data = QueryAPI(GetProductUrl(ingredientURLName), ingredientName);
+
+    if (data != null)
+    {
+        ingredientName = TidyProductName(data, ingredientName);
+    }
+}
+
+function CreateNewIngredientElement(newProductType)
+{
+    let ingredientNameElement = $("<li>" + newProductType.productType + "</li>");
+    let productArray = newProductType.productArray;
+
+    CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
+    CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
+
+    let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
+
+    ingredientMeanPriceElement.appendTo(ingredientNameElement);
+
+    ingredientNameElement.appendTo(ingredientInformationListElement);
+}
+
+// function CreateNewProductInformationElements(newProductType)
+// {
+//     let ingredientNameElement = $("<li>" + newProductType.productType + "</li>");
+//     let productArray = newProductType.productArray;
+
+//     CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
+//     CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
+
+//     let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
+
+//     ingredientMeanPriceElement.appendTo(ingredientNameElement);
+
+//     ingredientNameElement.appendTo(ingredientInformationListElement);
+// }
+
+function GetSanitisedName(initialName)
+{
+    //Remove everything that isn't a letter or a space
+    return initialName.replace(/[^a-z \s]/g, '');
+}
+
+function GetURLName(initialName)
+{
+    //Spaces are represented by %20 in the url
+    return initialName.replace(" ", "%20");
 }
 
 function SanitiseUserEntry(event)
@@ -55,10 +119,11 @@ function SanitiseUserEntry(event)
     GetProductUrl(name, URLname);
 }
 
-function GetProductUrl(productName, productUrlName)
+function GetProductUrl(productUrlName)
 {
-    let productApiUrl = "https://www.woolworths.com.au/apis/ui/Search/products?searchTerm=" + productUrlName + "&sortType=TraderRelevance&pageSize=20";
-    QueryAPI(productApiUrl, productName)
+    return "https://www.woolworths.com.au/apis/ui/Search/products?searchTerm=" + productUrlName + "&sortType=TraderRelevance&pageSize=20";
+    //let productApiUrl = "https://www.woolworths.com.au/apis/ui/Search/products?searchTerm=" + productUrlName + "&sortType=TraderRelevance&pageSize=20";
+    //QueryAPI(productApiUrl, productName)
 }
 
 function QueryAPI(url, productName)
@@ -73,12 +138,32 @@ function QueryAPI(url, productName)
 
                 let tidyProductName = TidyProductName(data, productName);
 
-                if (data.Products != null) ExtractRelevantProductInformationFromAPI(data, tidyProductName);
-                else ProductNotFound(tidyProductName);
+                //if (data.Products != null) ExtractRelevantProductInformationFromAPI(data, tidyProductName);
+                if (data.Products != null) return data;
+                else { ProductNotFound(tidyProductName); return null; }
             });
         }
     });
 }
+
+// function QueryAPI(url, productName)
+// {
+//     fetch(url).then(function (response) 
+//     {
+//         if (response.ok) 
+//         {
+//             response.json().then(function (data) 
+//             {
+//                 console.log(data);
+
+//                 let tidyProductName = TidyProductName(data, productName);
+
+//                 if (data.Products != null) ExtractRelevantProductInformationFromAPI(data, tidyProductName);
+//                 else ProductNotFound(tidyProductName);
+//             });
+//         }
+//     });
+// }
 
 function TidyProductName(data, productName)
 {
@@ -362,6 +447,11 @@ class FruitAndVegObject
     }
 }
 
+function CreateNewRecipe()
+{
+
+}
+
 function SaveRecipe()
 {
 
@@ -389,4 +479,6 @@ function NoUsableProductsWereFound(productName)
 
 Init();
 
-$("#searchBox").bind("keyup" , IngredientEntered);
+//$("#ingredientSearchBox").bind("keyup" , IngredientEntered);
+
+$("#addIngredientButton").click(AddIngredient);

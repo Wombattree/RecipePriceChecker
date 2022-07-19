@@ -64,8 +64,8 @@ function ListRecipesInCategory(data)
         let newMealElement = $("<div data-recipeid='" + data.meals[i].idMeal + "' class='categoryButton'>" + data.meals[i].strMeal + "</div>");
         let newMealElementImage = $("<image data-recipeid='" + data.meals[i].idMeal + "' class='previewImageWithLink' src='" + data.meals[i].strMealThumb + "' alt='Recipe preview image'>");
 
-        $(newMealElement).click(SearchByRecipeIDButtonPressed);
-        $(newMealElementImage).click(SearchByRecipeIDButtonPressed);
+        $(newMealElement).click(GoToOnlineRecipe);
+        $(newMealElementImage).click(GoToOnlineRecipe);
 
         newMealElement.appendTo(recipeInCategoryListElement);
         newMealElementImage.appendTo(recipeInCategoryListElement);

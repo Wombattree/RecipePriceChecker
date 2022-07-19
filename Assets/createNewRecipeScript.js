@@ -95,6 +95,7 @@ function Init()
     AddFruitsAndVegetablesToArray();
     CreateNewRecipe();
     IsThisANewRecipeOrALoadedRecipe();
+    IsThisAnOnlineRecipe();
 }
 
 function IsThisANewRecipeOrALoadedRecipe()
@@ -112,6 +113,7 @@ function IsThisAnOnlineRecipe()
     let recipeLoadInformation = JSON.parse(localStorage.getItem("RecipePriceCheckerOnlineRecipeToLoad"));
     if (recipeLoadInformation != null && recipeLoadInformation.length > 0)
     {
+        console.log("Loading online recipe");
         LoadOnlineRecipe(recipeLoadInformation);
         localStorage.removeItem("RecipePriceCheckerOnlineRecipeToLoad");
     }
@@ -631,14 +633,35 @@ function NoUsableProductsWereFound(productName)
     console.log("We coulnd't find enough products that match the requirements for " + productName + ". We apologise for the inconvenience.");
 }
 
-function LoadOnlineRecipe(recipeLoadInformation)
+class OnlineRecipe
 {
-    QueryAPIForOnlineRecipes(url);
+    constructor(recipeName, ingredients, instructions, image)
+    {
+        this.recipeName = recipeName;
+        this.ingredients = ingredients;
+        this.instructions = instructions;
+        this.image = image;
+    }
 }
 
-function QueryAPIForOnlineRecipes(url)
+class Ingredient
 {
-    fetch(url).then(function (response) 
+    constructor(ingredientName, ingredientQuantity, ingredientUnits)
+    {
+        this.ingredientName = ingredientName;
+        this.ingredientQuantity = ingredientQuantity;
+        this.ingredientUnits = ingredientUnits;
+    }
+}
+
+function LoadOnlineRecipe(recipeLoadInformation)
+{
+    QueryAPIForOnlineRecipes(recipeLoadInformation);
+}
+
+function QueryAPIForOnlineRecipes(recipeLoadInformation)
+{
+    fetch(recipeLoadInformation).then(function (response) 
     {
         if (response.ok) 
         {
@@ -654,25 +677,25 @@ function QueryAPIForOnlineRecipes(url)
 
 function DisplayRecipe(data)
 {
-    let newRecipeNameElement = $("<div>" + data.meals[0].strMeal + "</div>");
-    let newRecipeElementImage = $("<image class='previewImage' src='" + data.meals[0].strMealThumb + "' alt='Recipe preview image'>");
+    let recipe = PullInformationIntoRecipe(data);
 
-    newRecipeNameElement.appendTo(recipeInformationListElement);
-    newRecipeElementImage.appendTo(recipeInformationListElement);
+    let newRecipeNameElement = $("<div>" + recipe.recipeName + "</div>");
+    let newRecipeElementImage = $("<image class='previewImage' src='" + recipe.image + "' alt='Recipe preview image'>");
 
-    let ingredients = PullIngredientsIntoArray(data);
+    newRecipeNameElement.appendTo(ingredientInformationListElement);
+    newRecipeElementImage.appendTo(ingredientInformationListElement);
 
-    for (let i = 0; i < ingredients.length; i++) 
+    for (let i = 0; i < recipe.ingredients.length; i++)
     {
-        let newIngredientElement = $("<div>" + ingredients[i].ingredientQuantity + " " + ingredients[i].ingredientName + "</div>");
-        newIngredientElement.appendTo(recipeInformationListElement);
+        let newIngredientElement = $("<div>" + recipe.ingredients[i].ingredientQuantity + " " + recipe.ingredients[i].ingredientName + "</div>");
+        newIngredientElement.appendTo(ingredientInformationListElement);
     }
 
-    let newRecipeInstructionsElement = $("<div>" + data.meals[0].strInstructions + "</div>");
-    newRecipeInstructionsElement.appendTo(recipeInformationListElement);
+    let newRecipeInstructionsElement = $("<div>" + recipe.instructions + "</div>");
+    newRecipeInstructionsElement.appendTo(ingredientInformationListElement);
 }
 
-function PullIngredientsIntoArray(data)
+function PullInformationIntoRecipe(data)
 {
     let ingredientArray = [];
     for (let i = 1; i <= 20; i++) 
@@ -682,20 +705,27 @@ function PullIngredientsIntoArray(data)
 
         if (data.meals[0][ingredient] != "" && data.meals[0][ingredient] != null && data.meals[0][measurement] != "" && data.meals[0][measurement] != null) 
         {
-            ingredientArray.push(new Ingredient(data.meals[0][ingredient], data.meals[0][measurement]));
+            let quantity = GetUnitsOrValueFromQuantity(false, data.meals[0][measurement]);
+            let units = GetUnitsOrValueFromQuantity(true, data.meals[0][measurement]);
+            ingredientArray.push(new Ingredient(data.meals[0][ingredient], quantity, units));
         }
     }
-    console.log(ingredientArray);
-    return ingredientArray;
+
+    let newOnlineRecipe = new OnlineRecipe(data.meals[0].strMeal, ingredientArray, data.meals[0].strInstructions, data.meals[0].strMealThumb);
+
+    console.log(newOnlineRecipe);
+    return newOnlineRecipe;
 }
 
-class Ingredient
+function GetUnitsOrValueFromQuantity(getUnits, quantity)
 {
-    constructor(ingredientName, ingredientQuantity)
-    {
-        this.ingredientName = ingredientName;
-        this.ingredientQuantity = ingredientQuantity;
-    }
+    if (getUnits) return quantity.replace(/[^a-z]/g, '');
+    else return quantity.replace(/[^0-9]/g, '');
+}
+
+function PullInstrutionsIntoArray()
+{
+
 }
 
 Init();

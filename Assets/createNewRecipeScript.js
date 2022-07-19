@@ -1,15 +1,67 @@
 var ingredientInformationListElement = $("#ingredientInformation");
+var instructionInformationListElement = $("#instructionInformation");
 
 var addIngredientContainerElement = $("#addIngredientContainer");
 var ingredientQuantitySelectorElement = $("#ingredientQuantitySelector");
 var ingredientUnitySelectorElement = $("#ingredientUnitsSelector");
 var ingredientSearchBoxElement = $("#ingredientSearchBox");
 
-//Products wil have their prices displayed with this amount as the standard ie 100g
-var standardWeightToDisplay = 100;
+var instructionsInputBoxElement = $("#instructionsInputBox");
 
 //All products that have had their information extracted and displayed
 var allListedProducts = [];
+
+var allListedIngredients = [];
+var allListedInstructions = [];
+
+var recipeNameDefault = "Please enter a name for your recipe";
+
+var allRecipes = [];
+
+class Recipe
+{
+    name;
+    searchName;
+    ingredients = [];
+    instructions = [];
+    cost;
+
+    AddIngredient(ingredient)
+    {
+        this.ingredients.push(ingredient);
+    }
+
+    AddInstruction(instruction)
+    {
+        this.instructions.push(instruction);
+    }
+
+    AddName(name, searchName)
+    {
+        this.name = name;
+        this.searchName = searchName;
+    }
+
+    UpdateCost(cost)
+    {
+        this.cost = cost;
+    }
+}
+
+class IngredientEntry
+{
+    constructor(ingredientQuantity, ingredientUnit, ingredientName)
+    {
+        this.ingredientQuantity = ingredientQuantity;
+        this.ingredientUnit = ingredientUnit;
+        this.ingredientName = ingredientName;
+    }
+
+    AddProductTypeInformation(productType)
+    {
+        this.productType = productType;
+    }
+}
 
 //A type of product, ie potatoes or apples or bacon
 class ProductType
@@ -42,70 +94,74 @@ function Init()
 {
     AddFruitsAndVegetablesToArray();
     CreateNewRecipe();
+    IsThisANewRecipeOrALoadedRecipe();
 }
 
-function IngredientEntered(event)
+function IsThisANewRecipeOrALoadedRecipe()
 {
-    //If the event was triggered by the enter key
-    if (event.keyCode === 13) SanitiseUserEntry(event);
+    let recipeLoadInformation = JSON.parse(localStorage.getItem("RecipePriceCheckerPageToLoad"));
+    if (recipeLoadInformation != null && recipeLoadInformation.length > 0)
+    {
+        LoadSpecificRecipe(recipeLoadInformation);
+        localStorage.removeItem("RecipePriceCheckerPageToLoad");
+    }
 }
+
+function IsThisAnOnlineRecipe()
+{
+    let recipeLoadInformation = JSON.parse(localStorage.getItem("RecipePriceCheckerOnlineRecipeToLoad"));
+    if (recipeLoadInformation != null && recipeLoadInformation.length > 0)
+    {
+        LoadOnlineRecipe(recipeLoadInformation);
+        localStorage.removeItem("RecipePriceCheckerOnlineRecipeToLoad");
+    }
+}
+
+// function IngredientEntered(event)
+// {
+//     //If the event was triggered by the enter key
+//     if (event.keyCode === 13) AddIngredient();
+// }
 
 function AddIngredient()
 {
     let ingredientQuantity = ingredientQuantitySelectorElement.val();
     let ingredientUnit = ingredientUnitySelectorElement.val();
+
+    ingredientQuantitySelectorElement.val("");
+    ingredientUnitySelectorElement.val("");
+
+    if (ingredientUnit === "kg")
+    {
+        ingredientUnit = "g"
+        ingredientQuantity = ingredientQuantity * 1000;
+    } 
+    else if (ingredientUnit === "l")
+    {
+        ingredientUnit = "ml"
+        ingredientQuantity = ingredientQuantity * 1000;
+    }
+
     let ingredientName = ingredientSearchBoxElement.val();
     ingredientName = GetSanitisedName(ingredientName);
     let ingredientURLName = GetURLName(ingredientName);
 
-    let data = QueryAPI(GetProductUrl(ingredientURLName), ingredientName);
+    let newIngredientEntry = new IngredientEntry(ingredientQuantity, ingredientUnit, ingredientName);
 
-    if (data != null)
-    {
-        ingredientName = TidyProductName(data, ingredientName);
-    }
+    QueryAPI(GetProductUrl(ingredientURLName), ingredientName, newIngredientEntry);
 }
-
-function CreateNewIngredientElement(newProductType)
-{
-    let ingredientNameElement = $("<li>" + newProductType.productType + "</li>");
-    let productArray = newProductType.productArray;
-
-    CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
-    CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
-
-    let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
-
-    ingredientMeanPriceElement.appendTo(ingredientNameElement);
-
-    ingredientNameElement.appendTo(ingredientInformationListElement);
-}
-
-// function CreateNewProductInformationElements(newProductType)
-// {
-//     let ingredientNameElement = $("<li>" + newProductType.productType + "</li>");
-//     let productArray = newProductType.productArray;
-
-//     CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
-//     CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
-
-//     let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
-
-//     ingredientMeanPriceElement.appendTo(ingredientNameElement);
-
-//     ingredientNameElement.appendTo(ingredientInformationListElement);
-// }
 
 function GetSanitisedName(initialName)
 {
+    let name = initialName.toLowerCase();
     //Remove everything that isn't a letter or a space
-    return initialName.replace(/[^a-z \s]/g, '');
+    return name.replace(/[^a-z \s]/g, '');
 }
 
 function GetURLName(initialName)
 {
     //Spaces are represented by %20 in the url
-    return initialName.replace(" ", "%20");
+    return initialName.replace(/\s/g, "%20");
 }
 
 function SanitiseUserEntry(event)
@@ -114,7 +170,7 @@ function SanitiseUserEntry(event)
     //Remove everything that isn't a letter or a space
     name = name.replace(/[^a-z \s]/g, '');
     //Spaces are represented by %20 in the url
-    let URLname = name.replace(" ", "%20");
+    let URLname = name.replace(/\s/g, "%20");
 
     GetProductUrl(name, URLname);
 }
@@ -122,11 +178,9 @@ function SanitiseUserEntry(event)
 function GetProductUrl(productUrlName)
 {
     return "https://www.woolworths.com.au/apis/ui/Search/products?searchTerm=" + productUrlName + "&sortType=TraderRelevance&pageSize=20";
-    //let productApiUrl = "https://www.woolworths.com.au/apis/ui/Search/products?searchTerm=" + productUrlName + "&sortType=TraderRelevance&pageSize=20";
-    //QueryAPI(productApiUrl, productName)
 }
 
-function QueryAPI(url, productName)
+function QueryAPI(url, productName, newIngredientEntry)
 {
     fetch(url).then(function (response) 
     {
@@ -138,32 +192,17 @@ function QueryAPI(url, productName)
 
                 let tidyProductName = TidyProductName(data, productName);
 
-                //if (data.Products != null) ExtractRelevantProductInformationFromAPI(data, tidyProductName);
-                if (data.Products != null) return data;
+                if (data.Products != null)
+                {
+                    newIngredientEntry.ingredientName = tidyProductName;
+                    ExtractRelevantProductInformationFromAPI(data, tidyProductName, newIngredientEntry);
+                } 
+                //if (data.Products != null) return data;
                 else { ProductNotFound(tidyProductName); return null; }
             });
         }
     });
 }
-
-// function QueryAPI(url, productName)
-// {
-//     fetch(url).then(function (response) 
-//     {
-//         if (response.ok) 
-//         {
-//             response.json().then(function (data) 
-//             {
-//                 console.log(data);
-
-//                 let tidyProductName = TidyProductName(data, productName);
-
-//                 if (data.Products != null) ExtractRelevantProductInformationFromAPI(data, tidyProductName);
-//                 else ProductNotFound(tidyProductName);
-//             });
-//         }
-//     });
-// }
 
 function TidyProductName(data, productName)
 {
@@ -174,7 +213,7 @@ function TidyProductName(data, productName)
     return newProductName;
 }
 
-function ExtractRelevantProductInformationFromAPI(data, productName)
+function ExtractRelevantProductInformationFromAPI(data, productName, newIngredientEntry)
 {
     let newProductArray = [];
 
@@ -227,9 +266,11 @@ function ExtractRelevantProductInformationFromAPI(data, productName)
         console.log(newProductType);
 
         allListedProducts.push(newProductType);
-        CreateNewProductInformationElements(newProductType, allListedProducts.length - 1);
+        newIngredientEntry.AddProductTypeInformation(newProductType);
+        allListedIngredients.push(newIngredientEntry);
+        CreateNewProductInformationElements(newIngredientEntry);
     }
-    else NoUsableProductsWereFound(productName)
+    else { NoUsableProductsWereFound(productName); return null; }
 }
 
 function GetProductUnitType(productSize)
@@ -298,19 +339,40 @@ function NormalisePrice(originalWeight, originalUnits, originalPrice)
     return originalPrice / productWeightInGramsOrML;
 }
 
-function CreateNewProductInformationElements(newProductType)
+function CreateNewProductInformationElements(newIngredientEntry)
 {
-    let ingredientNameElement = $("<li>" + newProductType.productType + "</li>");
-    let productArray = newProductType.productArray;
+    let ingredientContainerElement = $("<li></li>");
 
-    CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
-    CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
+    let ingredientQuantityElement = $("<div>" + newIngredientEntry.ingredientQuantity + newIngredientEntry.ingredientUnit + "</div>");
+    let ingredientNameElement = $("<li>" + newIngredientEntry.productType.productType + "</li>");
+    let productArray = newIngredientEntry.productType.productArray;
 
-    let ingredientMeanPriceElement = $("<p>Mean price ($/100g): $" + (GetMeanPrice(productArray) * standardWeightToDisplay).toFixed(2) + "<p/>");
+    //CreateMinOrMaxPriceElement(true, productArray, GetIndexOfMinOrMaxPrice(true, productArray), ingredientNameElement);
+    //CreateMinOrMaxPriceElement(false, productArray, GetIndexOfMinOrMaxPrice(false, productArray), ingredientNameElement);
+
+    let ingredientMeanPriceElement = $("<p class='meanPrice'>Estimated price for " + newIngredientEntry.ingredientQuantity + newIngredientEntry.ingredientUnit + ": $" + (GetMeanPrice(productArray) * newIngredientEntry.ingredientQuantity).toFixed(2) + "<p/>");
+
+    ingredientQuantityElement.appendTo(ingredientContainerElement);
+    ingredientNameElement.appendTo(ingredientContainerElement);
 
     ingredientMeanPriceElement.appendTo(ingredientNameElement);
 
-    ingredientNameElement.appendTo(ingredientInformationListElement);
+    ingredientContainerElement.appendTo(ingredientInformationListElement);
+
+    GetAppoximateRecipeCost();
+}
+
+function GetAppoximateRecipeCost()
+{
+    let meanCosts = $("#ingredientInformation").find(".meanPrice");
+    let totalCostInCents = 0;
+    for (let i = 0; i < meanCosts.length; i++) 
+    {
+        let wholeString = meanCosts[i].outerText;
+        let costString = parseFloat(wholeString.substring(wholeString.indexOf("$") + 1));
+        totalCostInCents += costString * 100;
+    }
+    $("#approximateCost").text("Estimated total cost: $" + totalCostInCents / 100);
 }
 
 function CreateMinOrMaxPriceElement(isPriceMin, productArray, productArrayIndex, elementToAppendTo)
@@ -449,12 +511,37 @@ class FruitAndVegObject
 
 function CreateNewRecipe()
 {
-
+    ingredientInformationListElement.empty();
+    instructionInformationListElement.empty();
+    $("#recipeName").text(recipeNameDefault);
 }
 
 function SaveRecipe()
 {
+    let recipeName = $("#recipeName").text();
+    if (recipeName === recipeNameDefault) PleaseEnterAName();
+    else
+    {
+        let newRecipe = new Recipe();
 
+        for (let i = 0; i < allListedIngredients.length; i++) 
+        {
+            newRecipe.AddIngredient(allListedIngredients[i]);
+        }
+        for (let i = 0; i < allListedInstructions.length; i++) 
+        {
+            newRecipe.AddInstruction(allListedInstructions[i]);
+        }
+        newRecipe.AddName(recipeName, recipeName.replace(/\s/g, ""));
+        LoadAllRecipes();
+        allRecipes.push(newRecipe);
+        localStorage.setItem("RecipePriceCheckerRecipes", JSON.stringify(allRecipes));
+    }
+}
+
+function PleaseEnterAName()
+{
+    console.log("The recipe nees a name");
 }
 
 function DoesRecipeAlreadyExist()
@@ -462,9 +549,76 @@ function DoesRecipeAlreadyExist()
 
 }
 
-function LoadRecipe()
+function LoadAllRecipes()
+{
+    let savedRecipes = JSON.parse(localStorage.getItem("RecipePriceCheckerRecipes"));
+
+    if (savedRecipes != null && savedRecipes.length > 0)
+    {
+        allRecipes = savedRecipes;
+    } 
+    else console.log("No saved recipes found");
+}
+
+function LoadSpecificRecipe(recipeLoadInformation)
+{
+    LoadAllRecipes();
+    for (let i = 0; i < allRecipes.length; i++) 
+    {
+        if (allRecipes[i].searchName === recipeLoadInformation) { DisplayLoadedRecipe(allRecipes[i]); break; }
+    }
+    RecipeNotFound();
+}
+
+function RecipeNotFound()
 {
 
+}
+
+function DisplayLoadedRecipe(recipe)
+{
+    $("#recipeName").text(recipe.name);
+    for (let i = 0; i < recipe.ingredients.length; i++)
+    {
+        CreateNewProductInformationElements(recipe.ingredients[i]);
+    }
+    for (let i = 0; i < recipe.instructions.length; i++)
+    {
+        CreateInstructionElement(recipe.instructions[i]);
+    }
+}
+
+// function InstructionEntered(event)
+// {
+//     //If the event was triggered by the enter key
+//     if (event.keyCode === 13) AddInstruction();
+// }
+
+function AddInstruction()
+{
+    let instruction = instructionsInputBoxElement.val();
+    instructionsInputBoxElement.val("");
+
+    CreateInstructionElement(instruction);
+
+    allListedInstructions.push(instruction);
+}
+
+function CreateInstructionElement(instruction)
+{
+    let instructionElement = $("<li>" + instruction + "</li>");
+    instructionElement.appendTo(instructionInformationListElement);
+}
+
+// function RecipeNameEntered(event)
+// {
+//     //If the event was triggered by the enter key
+//     if (event.keyCode === 13) AddRecipeName();
+// }
+
+function AddRecipeName()
+{
+    $("#recipeName").text($("#recipeNameInput").val());
 }
 
 function ProductNotFound(productName)
@@ -477,8 +631,81 @@ function NoUsableProductsWereFound(productName)
     console.log("We coulnd't find enough products that match the requirements for " + productName + ". We apologise for the inconvenience.");
 }
 
+function LoadOnlineRecipe(recipeLoadInformation)
+{
+    QueryAPIForOnlineRecipes(url);
+}
+
+function QueryAPIForOnlineRecipes(url)
+{
+    fetch(url).then(function (response) 
+    {
+        if (response.ok) 
+        {
+            response.json().then(function (data) 
+            {
+                console.log(data);
+
+                DisplayRecipe(data);
+            });
+        }
+    });
+}
+
+function DisplayRecipe(data)
+{
+    let newRecipeNameElement = $("<div>" + data.meals[0].strMeal + "</div>");
+    let newRecipeElementImage = $("<image class='previewImage' src='" + data.meals[0].strMealThumb + "' alt='Recipe preview image'>");
+
+    newRecipeNameElement.appendTo(recipeInformationListElement);
+    newRecipeElementImage.appendTo(recipeInformationListElement);
+
+    let ingredients = PullIngredientsIntoArray(data);
+
+    for (let i = 0; i < ingredients.length; i++) 
+    {
+        let newIngredientElement = $("<div>" + ingredients[i].ingredientQuantity + " " + ingredients[i].ingredientName + "</div>");
+        newIngredientElement.appendTo(recipeInformationListElement);
+    }
+
+    let newRecipeInstructionsElement = $("<div>" + data.meals[0].strInstructions + "</div>");
+    newRecipeInstructionsElement.appendTo(recipeInformationListElement);
+}
+
+function PullIngredientsIntoArray(data)
+{
+    let ingredientArray = [];
+    for (let i = 1; i <= 20; i++) 
+    {
+        let ingredient = "strIngredient" + i;
+        let measurement = "strMeasure" + i;
+
+        if (data.meals[0][ingredient] != "" && data.meals[0][ingredient] != null && data.meals[0][measurement] != "" && data.meals[0][measurement] != null) 
+        {
+            ingredientArray.push(new Ingredient(data.meals[0][ingredient], data.meals[0][measurement]));
+        }
+    }
+    console.log(ingredientArray);
+    return ingredientArray;
+}
+
+class Ingredient
+{
+    constructor(ingredientName, ingredientQuantity)
+    {
+        this.ingredientName = ingredientName;
+        this.ingredientQuantity = ingredientQuantity;
+    }
+}
+
 Init();
 
-//$("#ingredientSearchBox").bind("keyup" , IngredientEntered);
+//$("#ingredientSearchBox").bind("keyup" , RecipeNameEntered);
+//$("#instructionsInputBox").bind("keyup" , InstructionEntered);
+//$("#recipeNameInput").bind("keyup" , IngredientEntered);
 
+$("#addRecipeName").click(AddRecipeName);
 $("#addIngredientButton").click(AddIngredient);
+$("#addInstructionButton").click(AddInstruction);
+$("#createNewRecipeButton").click(CreateNewRecipe);
+$("#saveRecipeButton").click(SaveRecipe);

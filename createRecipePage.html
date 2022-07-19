@@ -17,11 +17,14 @@
 
     <div class="navigationBar">
         <div class="categoryButton" id="mainPageButton">Return to main page</div>
-        <div class="categoryButton" id="onlineRecipesButton">Search Online Recipes</div>
-        <div class="categoryButton" id="loadRecipeButton">Load Recipe</div>
+        <div class="categoryButton" id="searchRecipesButton">Search Recipes</div>
     </div>
 
     <div class="categoryButton" id="createNewRecipeButton">Create New Recipe</div>
+
+    <input type="text" placeholder="Enter the recipe name" id="recipeNameInput">
+    <div class="categoryButton" id="addRecipeName">Add name</div>
+    <div id="recipeName">Enter a name for your recipe</div>
 
     <div id="addIngredientContainer">
         <input type="text" placeholder="Enter the ingredient quantity" id="ingredientQuantitySelector">
@@ -35,11 +38,16 @@
         <div class="categoryButton" id="addIngredientButton">Add Ingredient</div>
     </div>
 
-    <div class="categoryButton" id="addInstructionButton">Add Instruction</div>
-
+    <div id="addInstructionContainer">
+        <input type="text" placeholder="Enter the instruction" id="instructionsInputBox">
+        <div class="categoryButton" id="addInstructionButton">Add Instruction</div>
+    </div>
+    
     <ul id="ingredientInformation"></ul>
-
-    <ul id="recipeInformation"></ul>
+    <div id="approximateCost"></div>
+    <ul id="instructionInformation"></ul>
+    
+    <div class="categoryButton" id="saveRecipeButton">Save Recipe</div>
 
     <div>Recipes provided by "https://www.themealdb.com"</div>
     

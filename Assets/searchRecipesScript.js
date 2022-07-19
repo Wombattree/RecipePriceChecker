@@ -1,19 +1,31 @@
-var recipeInformationListElement = $("#recipeInformation");
+var recipeInformationListElement = $("#recipeCategories");
+var recipeInCategoryListElement = $("#recipesInCategory");
+var savedRecipesListElement = $("#savedRecipesList");
+
+var userRecipes = [];
+
+function Init()
+{
+    LoadUserRecipes();
+    DisplayUserRecipes();
+    DisplayOnlineCategories();
+}
 
 function ShowCategoriesButtonPressed()
 {
-    GetAPIUrl("listCategories", "");
+    let apiUrl = GetAPIUrl("listCategories", "");
+    QueryAPI("listCategories", apiUrl);
 }
 
 function GetAPIUrl(apiRequestType, seachTerm)
 {
-    let apiUrl;
+    //let apiUrl;
 
-    if (apiRequestType === "listCategories") apiUrl = "https://www.themealdb.com/api/json/v1/1/list.php?c=list";
-    else if (apiRequestType === "searchByCategory") apiUrl = "https://www.themealdb.com/api/json/v1/1/filter.php?c=" + seachTerm;
-    else if (apiRequestType === "searchByRecipeID") apiUrl = "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + seachTerm;
+    if (apiRequestType === "listCategories") return "https://www.themealdb.com/api/json/v1/1/list.php?c=list";
+    else if (apiRequestType === "searchByCategory") return "https://www.themealdb.com/api/json/v1/1/filter.php?c=" + seachTerm;
+    else if (apiRequestType === "searchByRecipeID") return "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + seachTerm;
 
-    QueryAPI(apiRequestType, apiUrl);
+    //QueryAPI(apiRequestType, apiUrl);
 }
 
 function QueryAPI(apiRequestType, apiUrl)
@@ -46,6 +58,7 @@ function ListCategories(data)
 
 function ListRecipesInCategory(data)
 {
+    recipeInCategoryListElement.empty();
     for (let i = 0; i < data.meals.length; i++)
     {
         let newMealElement = $("<div data-recipeid='" + data.meals[i].idMeal + "' class='categoryButton'>" + data.meals[i].strMeal + "</div>");
@@ -54,8 +67,8 @@ function ListRecipesInCategory(data)
         $(newMealElement).click(SearchByRecipeIDButtonPressed);
         $(newMealElementImage).click(SearchByRecipeIDButtonPressed);
 
-        newMealElement.appendTo(recipeInformationListElement);
-        newMealElementImage.appendTo(recipeInformationListElement);
+        newMealElement.appendTo(recipeInCategoryListElement);
+        newMealElementImage.appendTo(recipeInCategoryListElement);
     }
 }
 
@@ -108,13 +121,53 @@ function PullIngredientsIntoArray(data)
 function SearchByCategoryButtonPressed(event)
 {
     let buttonCategory = $(event.target).data("category");
-    GetAPIUrl("searchByCategory", buttonCategory);
+    let apiUrl = GetAPIUrl("searchByCategory", buttonCategory);
+    QueryAPI("searchByCategory", apiUrl);
 }
 
 function SearchByRecipeIDButtonPressed(event)
 {
     let recipeID = $(event.target).data("recipeid");
-    GetAPIUrl("searchByRecipeID", recipeID);
+    let apiUrl = GetAPIUrl("searchByRecipeID", recipeID);
+    QueryAPI("searchByRecipeID", apiUrl);
 }
+
+function LoadUserRecipes()
+{
+    let savedRecipes = JSON.parse(localStorage.getItem("RecipePriceCheckerRecipes"));
+    userRecipes = savedRecipes;
+}
+
+function DisplayUserRecipes()
+{
+    for (let i = 0; i < userRecipes.length; i++) 
+    {
+        let newUserRecipeDisplay = $("<li class='categoryButton' data-recipename=" + userRecipes[i].searchName + ">" + userRecipes[i].name + "</li>");
+        newUserRecipeDisplay.appendTo(savedRecipesListElement);
+        newUserRecipeDisplay.click(GoToUserRecipe);
+    }
+}
+
+function GoToUserRecipe(event)
+{
+    localStorage.setItem("RecipePriceCheckerPageToLoad", JSON.stringify($(event.target).data("recipename")));
+    window.location = "../RecipePriceChecker/createRecipePage.html";
+}
+
+function DisplayOnlineCategories()
+{
+    let apiUrl = GetAPIUrl("listCategories", "");
+    QueryAPI("listCategories", apiUrl);
+}
+
+function GoToOnlineRecipe(event)
+{
+    let recipeID = $(event.target).data("recipeid");
+    let recipeApiUrl = GetAPIUrl("searchByRecipeID", recipeID);
+    localStorage.setItem("RecipePriceCheckerOnlineRecipeToLoad", JSON.stringify(recipeApiUrl));
+    window.location = "../RecipePriceChecker/createRecipePage.html";
+}
+
+Init();
 
 $("#showCategoriesButton").click(ShowCategoriesButtonPressed);

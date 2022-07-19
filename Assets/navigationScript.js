@@ -1,14 +1,13 @@
 var mainPageButton = $("#mainPageButton");
-var onlineRecipesButton = $("#onlineRecipesButton");
+var searchRecipesButton = $("#searchRecipesButton");
 var createRecipesButton = $("#createRecipeButton");
-var loadRecipesButton = $("#loadRecipeButton");
 
 function NavigateToMainPage()
 {
     window.location = "../RecipePriceChecker/index.html";
 }
 
-function NavigateToOnlineRecipesPage()
+function NavigateToSearchRecipesPage()
 {
     window.location = "../RecipePriceChecker/searchRecipesPage.html";
 }
@@ -18,12 +17,6 @@ function NavigateToCreateRecipesPage()
     window.location = "../RecipePriceChecker/createRecipePage.html";
 }
 
-function NavigateToLoadRecipesPage()
-{
-    window.location = "../RecipePriceChecker/loadRecipePage.html";
-}
-
 $("#mainPageButton").click(NavigateToMainPage);
-$("#onlineRecipesButton").click(NavigateToOnlineRecipesPage);
+$("#searchRecipesButton").click(NavigateToSearchRecipesPage);
 $("#createRecipeButton").click(NavigateToCreateRecipesPage);
-$("#loadRecipeButton").click(NavigateToLoadRecipesPage);

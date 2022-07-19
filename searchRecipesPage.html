@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <link rel="stylesheet" href="./Assets/reset.css"/>
+    <link rel="stylesheet" href="./Assets/style.css"/>
+    <title>Recipe Price Checker - Search Recipes</title>
+  </head>
+
+  <body>
+    <header>
+        <h1>Search for recipes</h1>
+    </header>
+
+    <!-- <input type="text" placeholder="Enter the ingredient name" id="ingredientSearchBox"> -->
+
+    <ul id="ingredientInformation"></ul>
+
+    <div class="navigationBar">
+        <div class="categoryButton" id="mainPageButton">Return to main page</div>
+        <div class="categoryButton" id="createRecipeButton">Create Recipe</div>
+    </div>
+
+    <h2>Online Recipes</h2>
+    <p>Click a catgory to search through the recipes available online.</p>
+
+    <ul id="recipeCategories"></ul>
+    <ul id="recipesInCategory"></ul>
+
+    <h2>Saved Recipes</h2>
+    <p>If you've previously created and saved a recipe, it will appear here.</p>
+
+    <ul id="savedRecipesList"></ul>
+
+    <div>Recipes provided by "https://www.themealdb.com"</div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <!-- <script type="text/javascript" src="./Assets/createNewRecipeScript.js"></script> -->
+    <script type="text/javascript" src="./Assets/searchRecipesScript.js"></script>
+    <script type="text/javascript" src="./Assets/navigationScript.js"></script>
+  </body>
+</html>

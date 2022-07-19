@@ -1,7 +1,23 @@
-.previewImage
+.previewImage, .previewImageWithLink
 {
     max-height: 100px;
     max-width: 100px;
     height: auto;
     width: auto;
+}
+
+.previewImageWithLink:hover
+{
+    cursor: pointer;
+    user-select: none;
+}
+
+.categoryButton
+{
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    padding: 10px;
+    width: 150px;
+    background-color: grey;
 }

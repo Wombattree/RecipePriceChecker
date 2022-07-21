@@ -2,6 +2,10 @@ var recipeInformationListElement = $("#recipeCategories");
 var recipeInCategoryListElement = $("#recipesInCategory");
 var savedRecipesListElement = $("#savedRecipesList");
 
+const localStorageStringForLoadingUserRecipe = "RecipePriceChecker_LoadUserRecipe";
+const localStorageStringForLoadingOnlineRecipe = "RecipePriceChecker_LoadOnlineRecipe";
+const localStorageStringForSavingUserRecipes = "RecipePriceChecker_UserRecipes";
+
 var userRecipes = [];
 
 function Init()
@@ -134,15 +138,15 @@ function SearchByRecipeIDButtonPressed(event)
 
 function LoadUserRecipes()
 {
-    let savedRecipes = JSON.parse(localStorage.getItem("RecipePriceCheckerRecipes"));
-    userRecipes = savedRecipes;
+    let savedRecipes = JSON.parse(localStorage.getItem(localStorageStringForSavingUserRecipes));
+    if (savedRecipes !== null) userRecipes = savedRecipes;
 }
 
 function DisplayUserRecipes()
 {
     for (let i = 0; i < userRecipes.length; i++) 
     {
-        let newUserRecipeDisplay = $("<li class='categoryButton' data-recipename=" + userRecipes[i].searchName + ">" + userRecipes[i].name + "</li>");
+        let newUserRecipeDisplay = $("<li class='categoryButton' data-recipename=" + userRecipes[i].recipeSearchName + ">" + userRecipes[i].recipeName + "</li>");
         newUserRecipeDisplay.appendTo(savedRecipesListElement);
         newUserRecipeDisplay.click(GoToUserRecipe);
     }
@@ -150,7 +154,7 @@ function DisplayUserRecipes()
 
 function GoToUserRecipe(event)
 {
-    localStorage.setItem("RecipePriceCheckerPageToLoad", JSON.stringify($(event.target).data("recipename")));
+    localStorage.setItem(localStorageStringForLoadingUserRecipe, JSON.stringify($(event.target).data("recipename")));
     window.location = "../RecipePriceChecker/createRecipePage.html";
 }
 
@@ -164,7 +168,7 @@ function GoToOnlineRecipe(event)
 {
     let recipeID = $(event.target).data("recipeid");
     let recipeApiUrl = GetAPIUrl("searchByRecipeID", recipeID);
-    localStorage.setItem("RecipePriceCheckerOnlineRecipeToLoad", JSON.stringify(recipeApiUrl));
+    localStorage.setItem(localStorageStringForLoadingOnlineRecipe, JSON.stringify(recipeApiUrl));
     window.location = "../RecipePriceChecker/createRecipePage.html";
 }
 

@@ -1,0 +1,81 @@
+body{
+    background-image: url("https://images.pexels.com/photos/4021972/pexels-photo-4021972.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.previewImage, .previewImageWithLink
+{
+    max-height: 50px;
+    max-width: 50px;
+    
+}
+
+.previewImageWithLink:hover
+{
+    cursor: pointer;
+    user-select: none;
+}
+
+.h1Style{
+    font-size: 400%;
+    font-family: 'Pacifico', cursive;
+    margin: 0 45%;
+    color:rgb(15, 65, 15)
+}
+
+.MainSection{
+    display: flex;
+    flex: 1 1 0;
+    flex-wrap: wrap;
+}
+
+.Recipe{
+    flex: 1 1 0; 
+    margin-right: -5%;
+}
+
+.TitleSection{
+    margin-top: 3%;
+}
+
+.TitleSection h2{
+    font-family: 'Lato', sans-serif;
+    font-size: 200%;
+    color:rgb(47, 70, 152);
+    margin-left: 45%;
+    margin-right: -5%;
+   
+}
+.TitleSection p{
+    font-family: 'Lato', sans-serif;
+    font-size: 120%;
+    color:rgb(47, 70, 152);
+    margin: 1% -5% 2% 48%;
+}
+
+.position{
+    position: absolute;
+    right: 0;
+}
+
+
+#recipeCategories{
+    margin: 0 0 0 43%;
+}
+
+#recipeCategories div{
+    margin:1%;
+}
+
+#recipesInCategory{
+    background-color: antiquewhite;
+    opacity: 80%;
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -20% 0 20%;
+}
+
+
+

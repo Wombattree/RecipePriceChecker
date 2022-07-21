@@ -19,9 +19,7 @@ const localStorageStringForSavingUserRecipes = "RecipePriceChecker_UserRecipes";
 const recipeNameDefault = "Please enter a name for your recipe";
 
 var outstandingFetchRequests = [];
-
 var fruitAndVegWeights = [];
-
 var recipes = [];
 var currentRecipe;
 
@@ -377,7 +375,7 @@ function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredient
     let standardUnit = IsStandardUnit(letters);
     if (standardUnit !== null)
     {
-        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * fruitAndVegWeight;
+        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * standardUnit;
         else quantityAndUnitsParsed[0] = 1;
 
         quantityAndUnitsParsed[1] = standardUnit;
@@ -840,7 +838,7 @@ function GetSanitisedName(initialName)
 
 function GetUrlFriendlyName(str) 
 { 
-    let name = str.toLowerCase()
+    let name = str.toLowerCase();
     name = name.replace(/[^a-z \s]/g, '');
     return name.replace(/[\s]/g, "%20"); 
 }

@@ -8,6 +8,9 @@ const localStorageStringForSavingUserRecipes = "RecipePriceChecker_UserRecipes";
 
 var userRecipes = [];
 
+const categoriesPerRow = 6;
+const recipesPerRow = 6;
+
 function Init()
 {
     LoadUserRecipes();
@@ -21,15 +24,11 @@ function ShowCategoriesButtonPressed()
     QueryAPI("listCategories", apiUrl);
 }
 
-function GetAPIUrl(apiRequestType, seachTerm)
+function GetAPIUrl(apiRequestType, searchTerm)
 {
-    //let apiUrl;
-
     if (apiRequestType === "listCategories") return "https://www.themealdb.com/api/json/v1/1/list.php?c=list";
-    else if (apiRequestType === "searchByCategory") return "https://www.themealdb.com/api/json/v1/1/filter.php?c=" + seachTerm;
-    else if (apiRequestType === "searchByRecipeID") return "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + seachTerm;
-
-    //QueryAPI(apiRequestType, apiUrl);
+    else if (apiRequestType === "searchByCategory") return "https://www.themealdb.com/api/json/v1/1/filter.php?c=" + searchTerm;
+    else if (apiRequestType === "searchByRecipeID") return "https://www.themealdb.com/api/json/v1/1/lookup.php?i=" + searchTerm;
 }
 
 function QueryAPI(apiRequestType, apiUrl)
@@ -52,27 +51,58 @@ function QueryAPI(apiRequestType, apiUrl)
 
 function ListCategories(data)
 {
-    for (let i = 0; i < data.meals.length; i++)
+    let categories = data.meals.length;
+    let categoriesCreated = 0;
+    let categoryRows = Math.ceil(categories / categoriesPerRow);
+    recipeInCategoryListElement.empty();
+
+    for (let i = 0; i < categoryRows; i++) 
     {
-        let newCategoryElement = $("<div data-category='" + data.meals[i].strCategory + "' class='categoryButton'>" + data.meals[i].strCategory + "</div>");
-        $(newCategoryElement).click(SearchByCategoryButtonPressed);
-        newCategoryElement.appendTo(recipeInformationListElement);
+        let newRowElement = $("<div class='columns'></div>");
+
+        for (let j = 0; j < categoriesPerRow; j++) 
+        {
+            if (categoriesCreated < data.meals.length)
+            {
+                let offset = (j === 0 && i === categoryRows - 1) ? "is-offset-" + (categories - (categoryRows - 1) * categoriesPerRow + 2) : "";
+                let newCategoryElement = $("<div data-category='" + data.meals[categoriesCreated].strCategory + "' class='column is-2 " + offset + " loadRecipeButton'>" + data.meals[categoriesCreated].strCategory + "</div>");
+                $(newCategoryElement).click(SearchByCategoryButtonPressed);
+                newCategoryElement.appendTo(newRowElement);
+                categoriesCreated++;
+            }
+        }
+
+        newRowElement.appendTo(recipeInformationListElement);
     }
 }
 
 function ListRecipesInCategory(data)
 {
+    let recipes = data.meals.length;
+    let recipesCreated = 0;
+    let recipeRows = Math.ceil(recipes / recipesPerRow);
     recipeInCategoryListElement.empty();
-    for (let i = 0; i < data.meals.length; i++)
+
+    for (let i = 0; i < recipeRows; i++)
     {
-        let newMealElement = $("<div data-recipeid='" + data.meals[i].idMeal + "' class='categoryButton'>" + data.meals[i].strMeal + "</div>");
-        let newMealElementImage = $("<image data-recipeid='" + data.meals[i].idMeal + "' class='previewImageWithLink' src='" + data.meals[i].strMealThumb + "' alt='Recipe preview image'>");
+        let newRowElement = $("<div class='columns'></div>");
 
-        $(newMealElement).click(GoToOnlineRecipe);
-        $(newMealElementImage).click(GoToOnlineRecipe);
+        for (let j = 0; j < recipesPerRow; j++) 
+        {
+            if (recipesCreated < recipes)
+            {
+                let newRecipeContainerElement = $("<div data-recipeid='" + data.meals[recipesCreated].idMeal + "' class='column is-2 loadRecipeButton'></div>");
+                let newMealElement = $("<div data-recipeid='" + data.meals[recipesCreated].idMeal + "'>" + data.meals[recipesCreated].strMeal + "</div>");
+                let newMealElementImage = $("<image data-recipeid='" + data.meals[recipesCreated].idMeal + "' class='previewImageWithLink' src='" + data.meals[recipesCreated].strMealThumb + "' alt='Recipe preview image'>");
 
-        newMealElement.appendTo(recipeInCategoryListElement);
-        newMealElementImage.appendTo(recipeInCategoryListElement);
+                newMealElement.appendTo(newRecipeContainerElement);
+                newMealElementImage.appendTo(newRecipeContainerElement);
+                newRecipeContainerElement.click(GoToOnlineRecipe);
+                newRecipeContainerElement.appendTo(newRowElement);
+                recipesCreated++;
+            }
+        }
+        newRowElement.appendTo(recipeInCategoryListElement);
     }
 }
 
@@ -129,13 +159,6 @@ function SearchByCategoryButtonPressed(event)
     QueryAPI("searchByCategory", apiUrl);
 }
 
-function SearchByRecipeIDButtonPressed(event)
-{
-    let recipeID = $(event.target).data("recipeid");
-    let apiUrl = GetAPIUrl("searchByRecipeID", recipeID);
-    QueryAPI("searchByRecipeID", apiUrl);
-}
-
 function LoadUserRecipes()
 {
     let savedRecipes = JSON.parse(localStorage.getItem(localStorageStringForSavingUserRecipes));
@@ -144,11 +167,25 @@ function LoadUserRecipes()
 
 function DisplayUserRecipes()
 {
-    for (let i = 0; i < userRecipes.length; i++) 
+    let recipes = userRecipes.length;
+    let recipesCreated = 0;
+    let recipeRows = Math.ceil(recipes / recipesPerRow);
+
+    for (let i = 0; i < recipeRows; i++)
     {
-        let newUserRecipeDisplay = $("<li class='categoryButton' data-recipename=" + userRecipes[i].recipeSearchName + ">" + userRecipes[i].recipeName + "</li>");
-        newUserRecipeDisplay.appendTo(savedRecipesListElement);
-        newUserRecipeDisplay.click(GoToUserRecipe);
+        let newRowElement = $("<div class='columns'></div>");
+
+        for (let j = 0; j < recipesPerRow; j++) 
+        {
+            if (recipesCreated < recipes)
+            {
+                let newUserRecipeDisplay = $("<li class='column is-2 loadRecipeButton' data-recipename=" + userRecipes[recipesCreated].recipeSearchName + ">" + userRecipes[recipesCreated].recipeName + "</li>");
+                newUserRecipeDisplay.click(GoToUserRecipe);
+                newUserRecipeDisplay.appendTo(newRowElement);
+                recipesCreated++;
+            }
+        }
+        newRowElement.appendTo(savedRecipesListElement);
     }
 }
 

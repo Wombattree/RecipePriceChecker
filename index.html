@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100&family=Dancing+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100&family=Comfortaa:wght@300&family=Dancing+Script&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.css">
     <link rel="stylesheet" href="./Assets/reset.css"/>
     <link rel="stylesheet" href="./Assets/style.css"/>
@@ -12,16 +17,20 @@
   </head>
 
   <body>
-    <header>
-        <h1>Main Page</h1>
-    </header>
-
-    <div class="navigationBar">
-        <div class="categoryButton" id="searchRecipesButton">Search Recipes</div>
-        <div class="categoryButton" id="createRecipeButton">Create Recipe</div>
+    <div class="container" id="bodyContainer">
+        <header>
+            <p>Welcome to the</p>
+            <h1>Recipe Price Checker</h1>
+            <div class="text">Recipes provided by <a href="https://www.themealdb.com">The Meal Database</a></div>
+        </header>
+    
+        <div id="bodyContentContainer">
+            <div class="container" id="navBarMainPage">
+                <div class="navBarButtonMainPage" id="searchRecipesButton">Search Recipes</div>
+                <div class="navBarButtonMainPage" id="createRecipeButton">Create New Recipe</div>
+            </div>
+        </div>
     </div>
-
-    <div>Recipes provided by "https://www.themealdb.com"</div>
     
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script type="text/javascript" src="./Assets/navigationScript.js"></script>

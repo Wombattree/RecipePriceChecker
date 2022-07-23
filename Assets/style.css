@@ -1,28 +1,89 @@
-body { 
-    background: url(https://eatdairyfreeinbrum.files.wordpress.com/2019/09/carrots-food-fresh-616401.jpg?w=1024) no-repeat center center fixed; 
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;
-    text-align: center;
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    color: black;
-    position: relative;
-    font-family: 'Lato', sans-serif;
-  }
+:root
+{
+    --backgroundColour: rgb(255, 235, 246);
+    --bodyColour: rgb(255, 255, 255);
+    --fontColour: rgb(81, 64, 72);
+    --hoverColour: rgb(255, 221, 238);
+    --borderColour: rgb(221, 187, 206);
 
-.header {
-    font-family: 'Pacifico', cursive;
-    text-shadow: 1px 1px #ff6750;
-    font-size: 105px;
+    --borderRadiusBackground: 50px;
+    --borderRadiusButton: 15px;
+
+    --headerFont: 'Dancing Script', cursive;
+    --bodyFont: 'Comfortaa', cursive;
+
+    --standardFontSize: 25px;
+    --categoryTitleFontSize: 30px;
 }
 
-.hide{
-    display: none;
+html, body
+{
+    padding: 0;
+    margin: 0;
+}
+
+html
+{
+    height: 100%;
+}
+
+html 
+{
+    min-height: 100%;
+    text-align: center;
+    background-color: var(--backgroundColour);
+    color: var(--fontColour);
+}
+
+#bodyContainer
+{
+    margin-top: 3%;
+    
+    background-color: var(--bodyColour);
+
+    border: 5px;
+    border-style: solid;
+    border-color: var(--borderColour);
+    border-radius: var(--borderRadiusBackground);
+    font-size: 20px;
+}
+
+header
+{
+    padding: 2% 5% 3% 5%;
+    font-family: var(--headerFont);
+}
+
+header p
+{
+    font-size: 40px;
+}
+
+.text
+{
+    padding-top: 2%;
+    font-size: var(--standardFontSize);
+}
+
+.text a
+{
+    color: var(--fontColour);
+}
+
+h1
+{
+    font-size: 80px;
+    font-weight: bolder;
+}
+
+#bodyContentContainer
+{
+    font-family: var(--bodyFont);
 }
 
 .previewImage, .previewImageWithLink
 {
+    border-radius: var(--borderRadiusButton);
     max-height: 100px;
     max-width: 100px;
     height: auto;
@@ -35,29 +96,167 @@ body {
     user-select: none;
 }
 
-.categoryButton
+.categoryContainer
+{
+    padding: 0% 5% 2% 5%;
+}
+
+.newRecipeCategoryContainer
+{
+    padding: 1% 5% 1% 5%;
+}
+
+.categoryHeaderContainer
+{
+    padding: 3% 0% 3% 0%;
+}
+
+#navBarMainPage
+{
+    padding-bottom: 10%;
+}
+
+.navBarButtonMainPage
+{
+    font-size: 25px;
+    border: 5px;
+    margin: 1% 25% 1% 25%;
+}
+
+.navBarButton
+{
+    font-size: 15px;
+    border: 3px;
+}
+
+#recipeName
+{
+    font-size: 40px;
+    font-family: var(--headerFont);
+}
+
+.recipeNameUnderline, .recipeSectionUnderline
+{
+    height: 5px;
+    background-color: var(--backgroundColour);
+}
+
+#approximateCost
+{
+    padding-top: 3%;
+}
+
+.recipeNameUnderline
+{
+    margin: 0% 15% 0% 15%;
+}
+
+.recipeSectionUnderline
+{
+    margin: 0% 25% 2% 25%;
+}
+
+#instructionInformation
+{
+    list-style: lower-alpha;
+    margin: 0% 15% 0% 15%;
+    text-align: left;
+}
+
+input
+{
+    border: none;
+    border: solid 2px var(--backgroundColour);
+    border-radius: 50px;
+    font-size: 15px;
+    outline: none;
+}
+
+#ingredientUnitInput
+{
+    cursor: pointer;
+    border: solid 2px var(--backgroundColour);
+    border-radius: 50px;
+    font-size: 15px;
+    position: relative;
+}
+
+#unitContainer
+{
+    z-index: 1;
+    position: absolute;
+    top: 110%;
+    left: -2%;
+    width: 100%;
+    border: solid 2px var(--backgroundColour);
+    border-radius: 25px;
+    background-color: white;
+    padding: 10%;
+}
+
+.show
+{
+    display: block;
+}
+
+.hide
+{
+    display: none;
+}
+
+.unit
+{   
+    padding: 5% 0%;
+    cursor: pointer;
+}
+
+.unit:hover
+{
+    background-color: var(--backgroundColour);
+}
+
+#addRecipeInformationContainer
+{
+    padding: 0%;
+}
+
+.recipeSection
+{
+    font-size: 25px;
+    padding: 0.5% 0% 0.5% 0%;
+}
+
+.navBarButtonMainPage, .navBarButton, .loadRecipeButton, .recipePageButton
 {
     cursor: pointer;
     user-select: none;
-    padding: 8px;
-    background-color: rgb(213, 243, 248);
-    margin: auto;
-    border: 1px solid black;
-    border-radius: 4px;
-    width: 25vw;
-    font-family: 'Times New Roman', Times, serif;
-    font-weight: bold;
-    font-size: 25px;
+    padding: 1%;
+
+    border-radius: var(--borderRadiusButton);
+    background-color: var(--backgroundColour);
 }
 
-.referral {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+.navBarButtonMainPage:hover, .navBarButton:hover, .loadRecipeButton:hover, .recipePageButton:hover
+{
+    background-color: var(--hoverColour);
 }
 
+.categoryTitle
+{
+    font-size: var(--categoryTitleFontSize);
+}
 
+.loadRecipeButton, .recipePageButton
+{
+    border: none;
+}
 
+#saveRecipeButton
+{
+    margin: 0% 35% 0% 35%;
+}
 
-
-
+#onlineRecipesPreviewContainer
+{
+    padding-top: 5%;
+}

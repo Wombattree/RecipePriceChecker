@@ -5,56 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100&family=Dancing+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Arima:wght@100&family=Comfortaa:wght@300&family=Dancing+Script&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.css">
     <link rel="stylesheet" href="./Assets/reset.css"/>
     <link rel="stylesheet" href="./Assets/style.css"/>
     <title>Recipe Price Checker - Search Recipes</title>
   </head>
 
   <body>
-    <header>
-        <h1>Create new recipe</h1>
-    </header>
+    <div class="container" id="bodyContainer">
+      <header>
+          <h1>Create new recipe</h1>
+          <div class="text">Recipes provided by <a href="https://www.themealdb.com">The Meal Database</a></div>
+      </header>
+  
+      <div id="bodyContentContainer">
+          <div class="container columns">
+            <div class="column is-3 is-offset-3 navBarButton" id="mainPageButton">Return to Main Page</div>
+            <div class="column is-3 navBarButton" id="searchRecipesButton">Search Recipes</div>
+          </div>
 
-    <div class="navigationBar">
-        <div class="categoryButton" id="mainPageButton">Return to main page</div>
-        <div class="categoryButton" id="searchRecipesButton">Search Recipes</div>
-    </div>
+          <div class="categoryContainer">
+            <div class="container columns categoryHeaderContainer">
+              <div class="column is-3 recipePageButton" id="createNewRecipeButton">Create New Recipe</div>
+              <div class="column is-3 recipePageButton" id="displayEditRecipeNameButton">Add/Edit Recipe Name</div>
+              <div class="column is-3 recipePageButton" id="displayAddIngredientButton">Add Ingredient</div>
+              <div class="column is-3 recipePageButton" id="displayAddInstructionButton">Add Instruction</div>
+            </div>
+          </div>
+          
+          <div class="newRecipeCategoryContainer columns hide" id="addRecipeInformationContainer"></div>
 
-    <div class="categoryButton" id="createNewRecipeButton">Create New Recipe</div>
+          <div id="recipeName">Untitled Recipe</div>
+          <div class="recipeNameUnderline"></div>
 
-    <input type="text" placeholder="Please enter a name for your recipe" id="recipeNameInput">
-    <div class="categoryButton" id="addRecipeName">Add name</div>
-    <div id="recipeName">Enter a name for your recipe</div>
+          <div class="newRecipeCategoryContainer">
+            <div class="recipeSection">Ingredients</div>
+            <div class="recipeSectionUnderline"></div>
+            <ul id="ingredientInformation"></ul>
+            <div id="approximateCost"></div>
+          </div>
 
-    <div id="addIngredientContainer">
-        <input type="text" placeholder="Enter the ingredient quantity" id="ingredientQuantitySelector">
-        <select name="units" id="ingredientUnitsSelector">
-            <option value="g">g</option>
-            <option value="kg">kg</option>
-            <option value="ml">ml</option>
-            <option value="l">l</option>
-        </select>
-        <input type="text" placeholder="Enter the ingredient name" id="ingredientSearchBox">
-        <div class="categoryButton" id="addIngredientButton">Add Ingredient</div>
-    </div>
+          <div class="newRecipeCategoryContainer">
+            <div class="recipeSection">Instructions</div>
+            <div class="recipeSectionUnderline"></div>
+            <ul id="instructionInformation"></ul>
+          </div>
+          
+        <div class="categoryContainer">
+          <div class="recipePageButton" id="saveRecipeButton">Save Recipe</div>
+        </div>
+      </div>
+  </div>
 
-    <div id="addInstructionContainer">
-        <input type="text" placeholder="Enter the instruction" id="instructionInput">
-        <div class="categoryButton" id="addInstructionButton">Add Instruction</div>
-    </div>
-    
-    <ul id="ingredientInformation"></ul>
-    <div id="approximateCost"></div>
-    <ul id="instructionInformation"></ul>
-    
-    <div class="categoryButton" id="saveRecipeButton">Save Recipe</div>
-
-    <div>Recipes provided by "https://www.themealdb.com"</div>
-    
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
     <script type="text/javascript" src="./Assets/createAndDisplayRecipesScript.js"></script>
-    <!-- <script type="text/javascript" src="./Assets/createNewRecipeScript.js"></script> -->
     <script type="text/javascript" src="./Assets/navigationScript.js"></script>
   </body>
 </html>

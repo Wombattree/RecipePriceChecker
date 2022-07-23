@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="./Assets/reset.css"/>
+    <link rel="stylesheet" href="./Assets/style.css"/>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?amily=Anton&family=Cabin&family=Lato:ital@0;1&family=Pacifico&display=swap" rel="stylesheet">
+    <title>Recipe Price Checker - Search Recipes</title>
+  </head>
+
+  <body>
+    <nav class="navbar">
+        <h1 class="navbar-brand navbar-item">Search for recipes</h1>
+    </nav>
+
+    <!-- <input type="text" placeholder="Enter the ingredient name" id="ingredientSearchBox"> -->
+
+    <ul id="ingredientInformation"></ul>
+
+    <div class="navigationBar navbar-menu">
+        <div class="categoryButton navbar-start navbar-item button is-ghost " id="mainPageButton">&#8666 Main Page</div>
+        <div class="categoryButton navbar-item button is-ghost" id="createRecipeButton">&#8667 Create Recipe</div>
+    </div>
+    
+    <h1 class="h1Style">Online Recipes</h1>
+
+    <div class="MainSection">
+
+      <div class="section Recipe">
+        <div id="sectionHide">
+          <div class="TitleSection section column">  
+            <h2 class="title has-text-weight-semibold">What do you have in mind for tonight?</h3>
+            <p class="subtitile has-text-weight-semibold is-italic"> - Click a catagory to search through the recipes available online.</p>
+          </div>
+        </div>
+        <div>   
+          <ul id="recipeCategories"></ul>    
+          <ul id="recipesInCategory"></ul>         
+        </div>
+      </div>
+      
+      <div>
+        <h2>Saved Recipes</h2>
+        <p>If you've previously created and saved a recipe, it will appear here.</p>
+        <ul id="savedRecipesList"></ul>
+      </div>
+
+    </div>
+   
+
+    <div>Recipes provided by "https://www.themealdb.com"</div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <!-- <script type="text/javascript" src="./Assets/createNewRecipeScript.js"></script> -->
+    <script type="text/javascript" src="./Assets/searchRecipesScript.js"></script>
+    <script type="text/javascript" src="./Assets/navigationScript.js"></script>
+  </body>
+</html>

@@ -340,12 +340,11 @@ function ConvertOnlineIngredientsIntoUserIngredients(recipeData)
         {
             let ingredientName = GetSanitisedName(recipeData.meals[0][ingredient]);
             let quantityAndUnits = ParseOnlineRecipeIngredientUnitAndQuantity(recipeData.meals[0][measurement], ingredientName);
+            console.log(quantityAndUnits);
             let ingredientQuantity = quantityAndUnits[0];
             let ingredientUnits = quantityAndUnits[1];
-
-            //let ingredientQuantity = GetUnitsOrValueFromQuantity(false, recipeData.meals[0][measurement]);
-            //let ingredientUnits = GetUnitsOrValueFromQuantity(true, recipeData.meals[0][measurement]);
-            //ingredientUnits = ParseOnlineRecipeIngredientUnit(ingredientUnits);
+            ingredientQuantity = ConvertWeightIntoGramsOrML(ingredientQuantity, ingredientUnits);
+            ingredientUnits = GramsOrML(ingredientUnits);
 
             ingredientArray.push(new Ingredient(ingredientName, parseFloat(ingredientQuantity), ingredientUnits));
         }
@@ -359,12 +358,6 @@ function ConvertOnlineInstructionsIntoUserInstructions(recipeData)
     return recipeData.meals[0].strInstructions.split(/[.!?]/);
 }
 
-// function GetUnitsOrValueFromQuantity(getUnits, quantity)
-// {
-//     if (getUnits) return quantity.replace(/[^a-zA-Z]/g, '');
-//     else return quantity.replace(/[^0-9]/g, '');
-// }
-
 function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredientName)
 {
     let quantityAndUnitsLowercase = quantityAndUnits.toLowerCase();
@@ -375,20 +368,10 @@ function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredient
     let standardUnit = IsStandardUnit(letters);
     if (standardUnit !== null)
     {
-        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * standardUnit;
+        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers;
         else quantityAndUnitsParsed[0] = 1;
 
         quantityAndUnitsParsed[1] = standardUnit;
-        return quantityAndUnitsParsed;
-    }
-
-    let fruitAndVegWeight = GetEstimatedWeightOfFruitsAndVegetables(ingredientName);
-    if (fruitAndVegWeight !== null) 
-    {
-        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * fruitAndVegWeight;
-        else quantityAndUnitsParsed[0] = fruitAndVegWeight;
-
-        quantityAndUnitsParsed[1] = "g"; 
         return quantityAndUnitsParsed;
     }
 
@@ -403,6 +386,7 @@ function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredient
     }
 
     let otherMeasure = IsOtherMeasure(letters)
+    if (otherMeasure !== null)
     {
         if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * otherMeasure;
         else quantityAndUnitsParsed[0] = otherMeasure;
@@ -410,17 +394,36 @@ function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredient
         quantityAndUnitsParsed[1] = "g";
         return quantityAndUnitsParsed;
     }
+
+    let fruitAndVegWeight = GetEstimatedWeightOfFruitsAndVegetables(ingredientName);
+    if (fruitAndVegWeight !== null)
+    {
+        if (numbers !== null && isNaN(numbers) === false) quantityAndUnitsParsed[0] = numbers * fruitAndVegWeight;
+        else quantityAndUnitsParsed[0] = fruitAndVegWeight;
+
+        quantityAndUnitsParsed[1] = "g"; 
+        return quantityAndUnitsParsed;
+    }
+
+    quantityAndUnitsParsed[0] = 5;
+    quantityAndUnitsParsed[1] = "g";
+    return quantityAndUnitsParsed;
 }
 
 function IsStandardUnit(str)
 {
     switch(str)
     {
+        case "kilograms": return "kg";
+        case "kilogram": return "kg";
+        case "kilos": return "kg";
+        case "kilo": return "kg";
         case "perkg": return "kg";
         case "kgpunnet": return "kg";
         case "kgbag": return "kg";
         case "kg": return "kg";
 
+        case "grams": return "g";
         case "perg": return "g";
         case "gpunnet": return "g";
         case "gbag": return "g";
@@ -442,15 +445,18 @@ function IsStandardUnit(str)
 function IsUnitACupOrSpoonMeasure(str)
 {
     switch (str) {
-        case "cup": return "160";
+        case "cup": return 160;
 
-        case "tablespoon": return "20";
-        case "tbsp": return "20";
-        case "tbs": return "20";
+        case "tablespoon": return 20;
+        case "tblsp": return 20;
+        case "tblp": return 20;
+        case "tbsp": return 20;
+        case "tbls": return 20;
+        case "tbs": return 20;
         
-        case "teaspoon": return "5";
-        case "tspn": return "5";
-        case "tsp": return "5";
+        case "teaspoon": return 5;
+        case "tspn": return 5;
+        case "tsp": return 5;
     
         default: return null;
     }
@@ -460,10 +466,15 @@ function IsOtherMeasure(str)
 {
     switch (str) 
     {
-        case "pinch": return "5";
-        case "dash": return "5";
-        case "garnish": return "5";
-        case "totaste": return "5";
+        case "pinch": return 5;
+        case "topping": return 5;
+        case "dash": return 5;
+        case "garnish": return 5;
+        case "totaste": return 5;
+        case "sprigof": return 5;
+        case "sprigsof": return 5;
+        case "sprigoffresh": return 5;
+        case "sprigsoffresh": return 5;
     
         default: return null;
     }
@@ -551,6 +562,7 @@ function ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData
 
                     if (isNaN(pricePerGramOrML) === false)
                     {
+                        newWoolworthsProducts = BubbleSortPrices(newWoolworthsProducts);
                         let newWoolworthsProduct = new WoolworthsProduct(productName, productImageUrl, productStockCode, originalWeight, isOriginalWeightEstimated, originalUnits, originalPrice, pricePerGramOrML, normalisedUnit);
                         newWoolworthsProducts.push(newWoolworthsProduct);
                     }
@@ -563,10 +575,10 @@ function ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData
 
     if (newWoolworthsProducts.length > 0)
     {
+        let medianPrice = parseFloat(GetMedianPrice(newWoolworthsProducts));
         let minPriceIndex = GetIndexOfMinOrMaxPrice(true, newWoolworthsProducts);
         let maxPriceIndex = GetIndexOfMinOrMaxPrice(false, newWoolworthsProducts);
-        let meanPrice = parseFloat(GetMeanPrice(newWoolworthsProducts));
-        ingredient.AddWoolworthsProductInformation(newWoolworthsProducts, minPriceIndex, maxPriceIndex, meanPrice);
+        ingredient.AddWoolworthsProductInformation(newWoolworthsProducts, minPriceIndex, maxPriceIndex, medianPrice);
         if (displayIngredientOnCompletion)
         {
             DisplayIngredient(ingredient);
@@ -640,11 +652,11 @@ function GetEstimatedWeightOfFruitsAndVegetables(name)
     //If plural, remove the plural, of course if it's a plural es then we're fucked
     if (nameLowercase[nameLowercase.length - 1] === "s") nameLowercase.slice(0, -1);
 
-    for (let i = 0; i < fruitAndVegWeights.length; i++) 
+    for (let i = 0; i < fruitAndVegWeights.length; i++)
     {
         if (nameLowercase.includes(fruitAndVegWeights[i].name)) return fruitAndVegWeights[i].estimatedWeight;
-        else return null;
     }
+    return null;
 }
 
 function ConvertWeightIntoGramsOrML(weight, packageType)
@@ -693,6 +705,27 @@ function GetMeanPrice(productArray)
     return parseFloat(total / productArray.length);
 }
 
+function GetMedianPrice(productArray)
+{
+    const middle = Math.floor(productArray.length / 2);
+    return parseFloat(productArray[middle].pricePerGramOrML);
+}
+
+function BubbleSortPrices(array)
+{
+    for (let i = 0; i < array.length; i++) 
+    {
+        for (let j = 0; j < (array.length - i - 1); j++)
+        {
+            if (array[j + 1].pricePerGramOrML > array[j].pricePerGramOrML)
+            {
+                [array[j + 1], array[j]] = [array[j], array[j + 1]]
+            }
+        }
+    }
+    return array;
+}
+
 function NoUsableProductsWereFound(productName)
 {
     console.log("We couldn't find enough products that match the requirements for " + productName + ". We apologise for the inconvenience.");
@@ -716,7 +749,10 @@ function DisplayIngredient(ingredient)
     console.log(ingredient.meanPrice);
     console.log(ingredient.ingredientQuantity);
     console.log(ingredient.meanPrice * ingredient.ingredientQuantity);
-    let ingredientMeanPriceElement = $("<p class='meanPrice'>Estimated price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<p/>");
+
+    let ingredientMeanPriceElement;
+    if (ingredient.woolworthsProducts.length > 0) ingredientMeanPriceElement = $("<p class='meanPrice'>Estimated price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<p/>");
+    else ingredientMeanPriceElement = $("<p class='meanPrice'>Sorry, we couldn't find any products that matched!<p/>");
 
     ingredientQuantityElement.appendTo(ingredientContainerElement);
     ingredientNameElement.appendTo(ingredientContainerElement);

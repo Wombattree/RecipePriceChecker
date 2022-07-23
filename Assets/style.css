@@ -1,3 +1,26 @@
+body { 
+    background: url(https://eatdairyfreeinbrum.files.wordpress.com/2019/09/carrots-food-fresh-616401.jpg?w=1024) no-repeat center center fixed; 
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    color: black;
+    position: relative;
+    font-family: 'Lato', sans-serif;
+  }
+
+.header {
+    font-family: 'Pacifico', cursive;
+    text-shadow: 1px 1px #ff6750;
+    font-size: 105px;
+}
+
+.hide{
+    display: none;
+}
+
 .previewImage, .previewImageWithLink
 {
     max-height: 100px;
@@ -16,8 +39,25 @@
 {
     cursor: pointer;
     user-select: none;
-    text-align: center;
-    padding: 10px;
-    width: 150px;
-    background-color: grey;
+    padding: 8px;
+    background-color: rgb(213, 243, 248);
+    margin: auto;
+    border: 1px solid black;
+    border-radius: 4px;
+    width: 25vw;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: bold;
+    font-size: 25px;
 }
+
+.referral {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+
+
+
+
+

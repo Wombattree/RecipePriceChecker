@@ -2,21 +2,20 @@ var ingredientInformationListElement = $("#ingredientInformation");
 var instructionInformationListElement = $("#instructionInformation");
 
 var recipeNameDisplayElement = $("#recipeName");
-var recipeNameButtonElement = $("#addRecipeName");
-var recipeNameInputElement = $("#recipeNameInput");
 
 var approximateCostElement = $("#approximateCost");
-var addIngredientContainerElement = $("#addIngredientContainer");
-var ingredientQuantityInputElement = $("#ingredientQuantitySelector");
-var ingredientUnitInputElement = $("#ingredientUnitsSelector");
-var ingredientNameInputElement = $("#ingredientSearchBox");
 
-var instructionInputElement = $("#instructionInput");
+var addRecipeInformationContainerElement = $("#addRecipeInformationContainer");
+var editRecipeNameContainerElement = $("#editRecipeNameContainer");
+var addIngredientContainerElement = $("#addIngredientContainer");
+var addInstructionContainerElement = $("#addInstructionContainer");
+var displayedOption;
 
 const localStorageStringForLoadingUserRecipe = "RecipePriceChecker_LoadUserRecipe";
 const localStorageStringForLoadingOnlineRecipe = "RecipePriceChecker_LoadOnlineRecipe";
 const localStorageStringForSavingUserRecipes = "RecipePriceChecker_UserRecipes";
-const recipeNameDefault = "Please enter a name for your recipe";
+const recipeNameDefault = "Untitled Recipe";
+const recipeNameLoading = "Loading Recipe...";
 
 var outstandingFetchRequests = [];
 var fruitAndVegWeights = [];
@@ -27,19 +26,13 @@ var currentRecipe;
 class Recipe
 {
     ingredients = [];
-    AddIngredient(ingredient) { this.ingredients.push(ingredient); }
-
     instructions = [];
-    AddInstruction(instruction) { this.instructions.push(instruction); }
 
     estimatedCost = 0;
     image;
 
-    AddRecipeName(recipeName, recipeSearchName)
-    {
-        this.recipeName = recipeName;
-        this.recipeSearchName = recipeSearchName;
-    }
+    recipeName = "";
+    recipeSearchName = "";
 
     constructor(recipeName, recipeSearchName)
     {
@@ -139,7 +132,7 @@ function AddFruitAndVegetableWeightsToArray()
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("bell pepper", 170));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("broccoli", 225));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("brussel sprout", 14));
-    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cabbage", 9070));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cabbage", 750));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("capsicum", 170));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("carrot", 60));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cauliflower", 500));
@@ -173,16 +166,17 @@ function Init()
     ResetRecipePage();
     LoadAllUserRecipes();
     ProcessPageStatus(CheckRecipeStatus());
-    //ResetRecipeStatus();
+    ResetRecipeStatus();
 }
 
 function InitialiseButtons()
 {
-    recipeNameButtonElement.click(ChangeRecipeName);
-    $("#addIngredientButton").click(AddIngredient);
-    $("#addInstructionButton").click(AddInstruction);
-    $("#createNewRecipeButton").click(CreateUserRecipe);
     $("#saveRecipeButton").click(SaveRecipe);
+
+    $("#displayEditRecipeNameButton").click(OpenEditRecipeNameElement);
+    $("#displayAddIngredientButton").click(OpenAddIngredientElement);
+    $("#displayAddInstructionButton").click(OpenAddInstructionElement);
+    $("#createNewRecipeButton").click(CreateUserRecipe);
 }
 
 function CheckRecipeStatus()
@@ -213,7 +207,7 @@ function ResetRecipePage()
 {
     ingredientInformationListElement.empty();
     instructionInformationListElement.empty();
-    $("#recipeName").text(recipeNameDefault);
+    recipeNameDisplayElement.text(recipeNameDefault);
 }
 
 function LoadAllUserRecipes()
@@ -227,6 +221,7 @@ function LoadAllUserRecipes()
 function LoadSpecificUserRecipe()
 {
     console.log("Loading user recipe");
+    recipeNameDisplayElement.text(recipeNameLoading);
     let nameOfRecipeToLoad = JSON.parse(localStorage.getItem(localStorageStringForLoadingUserRecipe));
     if (nameOfRecipeToLoad != null)
     {
@@ -237,7 +232,7 @@ function LoadSpecificUserRecipe()
                 console.log("Loading: " + nameOfRecipeToLoad);
                 DisplayRecipe(recipes[i]);
                 currentRecipe = recipes[i];
-                localStorage.removeItem(localStorageStringForLoadingUserRecipe);
+                //localStorage.removeItem(localStorageStringForLoadingUserRecipe);
                 break; 
             }
             RecipeNotFound(nameOfRecipeToLoad);
@@ -254,9 +249,10 @@ function RecipeNotFound(nameOfRecipeToLoad)
 function LoadOnlineRecipe()
 {
     console.log("Loading online recipe");
+    recipeNameDisplayElement.text(recipeNameLoading);
     let apiUrlOfRecipeToLoad = JSON.parse(localStorage.getItem(localStorageStringForLoadingOnlineRecipe));
-    
-    if (apiUrlOfRecipeToLoad != null) QueryAPIForOnlineRecipes(apiUrlOfRecipeToLoad);
+    console.log(apiUrlOfRecipeToLoad);
+    if (apiUrlOfRecipeToLoad !== null) QueryAPIForOnlineRecipes(apiUrlOfRecipeToLoad);
     else ApiUrlNotFound(apiUrlOfRecipeToLoad);
 }
 
@@ -290,7 +286,7 @@ function ConvertOnlineRecipeIntoUserRecipe(recipeData)
     let convertedIngredients = ConvertOnlineIngredientsIntoUserIngredients(recipeData);
     for (let i = 0; i < convertedIngredients.length; i++) 
     { 
-        newConvertedRecipe.AddIngredient(convertedIngredients[i]);
+        newConvertedRecipe.ingredients.push(convertedIngredients[i]);
         SearchWoolworthsApiForIngredient(convertedIngredients[i]);
     }
     
@@ -301,15 +297,16 @@ function ConvertOnlineRecipeIntoUserRecipe(recipeData)
 
 function CheckIfFetchIsFinished()
 {
-    if (outstandingFetchRequests.length > 0) {window.setTimeout(CheckIfFetchIsFinished, 100); console.log(outstandingFetchRequests.length);}
+    if (outstandingFetchRequests.length > 0) { window.setTimeout(CheckIfFetchIsFinished, 100); }
     else
     {
-        console.log(tempRecipeData);
         let convertedInstructions = ConvertOnlineInstructionsIntoUserInstructions(tempRecipeData);
-        for (let i = 0; i < convertedInstructions.length; i++) { tempNewConvertedRecipe.AddInstruction(convertedInstructions[i]); }
+        for (let i = 0; i < convertedInstructions.length; i++) 
+        {
+            if (convertedInstructions[i].length > 0) tempNewConvertedRecipe.instructions.push(convertedInstructions[i]); 
+        }
     
         tempNewConvertedRecipe.estimatedCost = GetEstimatedCostOfRecipe(tempNewConvertedRecipe);
-        console.log(tempNewConvertedRecipe);
         currentRecipe = tempNewConvertedRecipe;
         DisplayRecipe(tempNewConvertedRecipe);
     }
@@ -340,7 +337,6 @@ function ConvertOnlineIngredientsIntoUserIngredients(recipeData)
         {
             let ingredientName = GetSanitisedName(recipeData.meals[0][ingredient]);
             let quantityAndUnits = ParseOnlineRecipeIngredientUnitAndQuantity(recipeData.meals[0][measurement], ingredientName);
-            console.log(quantityAndUnits);
             let ingredientQuantity = quantityAndUnits[0];
             let ingredientUnits = quantityAndUnits[1];
             ingredientQuantity = ConvertWeightIntoGramsOrML(ingredientQuantity, ingredientUnits);
@@ -361,7 +357,14 @@ function ConvertOnlineInstructionsIntoUserInstructions(recipeData)
 function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredientName)
 {
     let quantityAndUnitsLowercase = quantityAndUnits.toLowerCase();
-    let numbers = parseFloat(quantityAndUnitsLowercase.replace(/[^0-9]/g, ''));
+    let numbers = 0;
+    if (quantityAndUnitsLowercase.includes("/")) 
+    {
+        numbers = quantityAndUnitsLowercase.replace(/[^0-9/]/g, '');
+        let numbersSplit = numbers.split("/");
+        numbers = parseFloat(numbersSplit[0] / numbersSplit[1]);
+    }
+    else numbers = parseFloat(quantityAndUnitsLowercase.replace(/[^0-9]/g, ''));
     let letters = quantityAndUnitsLowercase.replace(/[^a-z]/g, '');
     let quantityAndUnitsParsed = [0, ""];
 
@@ -446,6 +449,7 @@ function IsUnitACupOrSpoonMeasure(str)
 {
     switch (str) {
         case "cup": return 160;
+        case "cups": return 160;
 
         case "tablespoon": return 20;
         case "tblsp": return 20;
@@ -506,7 +510,7 @@ function QueryWoolworthsAPI(ingredientUrl, ingredient, displayIngredientOnComple
         {
             response.json().then(function (apiResponseData) 
             {
-                console.log(apiResponseData);
+                //console.log(apiResponseData);
                 RemoveFetchNameFromOutstandingList(fetchName);
                 if (apiResponseData.Products != null) ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData, ingredient, displayIngredientOnCompletion);
                 else IngredientNotFound(ingredient);
@@ -738,27 +742,27 @@ function DisplayRecipe(recipeToDisplay)
     for (let i = 0; i < recipeToDisplay.instructions.length; i++) { DisplayInstruction(recipeToDisplay.instructions[i]); }
     UpdateRecipeCost(recipeToDisplay);
     DisplayEstimatedCost(recipeToDisplay);
+    console.log(currentRecipe);
 }
 
 function DisplayIngredient(ingredient)
 {
-    let ingredientContainerElement = $("<li></li>");
+    let ingredientListItemElement = $("<li></li>");
 
-    let ingredientQuantityElement = $("<div>" + ingredient.ingredientQuantity + ingredient.ingredientUnits + "</div>");
-    let ingredientNameElement = $("<div>" + CapitaliseFirstLetterOfString(ingredient.ingredientName) + "</div>");
-    console.log(ingredient.meanPrice);
-    console.log(ingredient.ingredientQuantity);
-    console.log(ingredient.meanPrice * ingredient.ingredientQuantity);
+    let ingredientContainerElement = $("<div class='columns'></div>");
+    let ingredientQuantityElement = $("<div class='column is-1 is-offset-3 ingredientUnit'>" + ingredient.ingredientQuantity + ingredient.ingredientUnits + "</div>");
+    let ingredientNameElement = $("<div class='column is-4'>" + CapitaliseFirstLetterOfString(ingredient.ingredientName) + "</div>");
 
     let ingredientMeanPriceElement;
-    if (ingredient.woolworthsProducts.length > 0) ingredientMeanPriceElement = $("<p class='meanPrice'>Estimated price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<p/>");
-    else ingredientMeanPriceElement = $("<p class='meanPrice'>Sorry, we couldn't find any products that matched!<p/>");
+    if (ingredient.woolworthsProducts.length > 0) ingredientMeanPriceElement = $("<div class='column is-5 meanPrice ingredientPrice'>Price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<div/>");
+    else ingredientMeanPriceElement = $("<div class='column is-5 meanPrice ingredientPrice'>No matching products found<div/>");
 
     ingredientQuantityElement.appendTo(ingredientContainerElement);
     ingredientNameElement.appendTo(ingredientContainerElement);
-    ingredientMeanPriceElement.appendTo(ingredientNameElement);
+    ingredientMeanPriceElement.appendTo(ingredientContainerElement);
 
-    ingredientContainerElement.appendTo(ingredientInformationListElement);
+    ingredientContainerElement.appendTo(ingredientListItemElement);
+    ingredientListItemElement.appendTo(ingredientInformationListElement);
 }
 
 function DisplayInstruction(instruction)
@@ -776,7 +780,6 @@ function UpdateRecipeCost(recipe)
         else console.log(recipe.ingredients[i].ingredientName + "'s mean price is NaN.");
     }
     recipe.estimatedCost = cost;
-    console.log(recipe.estimatedCost);
 }
 
 function DisplayEstimatedCost(recipe)
@@ -788,45 +791,53 @@ function CreateUserRecipe()
 {
     ResetRecipePage();
     currentRecipe = new Recipe();
+    UpdateRecipeCost(currentRecipe);
+    DisplayEstimatedCost(currentRecipe);
 }
 
 function ChangeRecipeName()
 {
+    let recipeNameInputElement = addRecipeInformationContainerElement.children("#recipeNameInput");
     let recipeName = RemoveEverythingFromStringExceptLettersSpacesHyphensAndApostrophes(recipeNameInputElement.val());
-    console.log(recipeName);
+
     if (recipeName.length > 0)
     {
         recipeNameInputElement.val("");
         recipeNameDisplayElement.text(recipeName);
-        currentRecipe.AddRecipeName(recipeName, GetUrlFriendlyName(recipeName));
+        currentRecipe.recipeName = recipeName;
+        currentRecipe.recipeSearchName = GetUrlFriendlyName(recipeName);
     }
 }
 
 function AddIngredient()
 {
-    let ingredientName = GetSanitisedName(ingredientNameInputElement.val());
-    let ingredientQuantity = ingredientQuantityInputElement.val();
-    let ingredientUnit = ingredientUnitInputElement.val();
+    let ingredientWeightInputElement = $("#ingredientWeightInput");
+    let ingredientNameInputElement = $("#ingredientNameInput");
 
-    if (ingredientName.length > 0 && ingredientQuantity > 0)
+    let ingredientName = GetSanitisedName(ingredientNameInputElement.val());
+    let ingredientWeight = ingredientWeightInputElement.val();
+    //Don't you dare ask why this stupid line exists
+    let ingredientUnit = $("#ingredientUnitInput").clone().children().remove().end().text();
+
+    if (ingredientName.length > 0 && ingredientWeight > 0)
     {
-        ingredientQuantityInputElement.val("");
+        ingredientWeightInputElement.val("");
         ingredientNameInputElement.val("");
     
         if (ingredientUnit === "kg")
         {
             ingredientUnit = "g"
-            ingredientQuantity = ingredientQuantity * 1000;
+            ingredientWeight = ingredientWeight * 1000;
         }
         else if (ingredientUnit === "l")
         {
             ingredientUnit = "ml"
-            ingredientQuantity = ingredientQuantity * 1000;
+            ingredientWeight = ingredientWeight * 1000;
         }
     
-        let newIngredient = new Ingredient(ingredientName, parseFloat(ingredientQuantity), ingredientUnit);
+        let newIngredient = new Ingredient(ingredientName, parseFloat(ingredientWeight), ingredientUnit);
     
-        currentRecipe.AddIngredient(newIngredient);
+        currentRecipe.ingredients.push(newIngredient);
     
         console.log(newIngredient);
         QueryWoolworthsAPI(GetIngredientUrl(GetUrlName(newIngredient.ingredientName)), newIngredient, true);
@@ -836,12 +847,13 @@ function AddIngredient()
 
 function AddInstruction()
 {
-    let instruction = instructionInputElement.val();
-    
+    let instructionElement = addRecipeInformationContainerElement.children("#instructionInput");
+    let instruction = instructionElement.val();
+
     if (instruction.length > 0)
     {
-        instructionInputElement.val("");
-        currentRecipe.AddInstruction(instruction);
+        instructionElement.val("");
+        currentRecipe.instructions.push(instruction);
         DisplayInstruction(instruction);
     }
 }
@@ -882,6 +894,80 @@ function GetUrlFriendlyName(str)
 function PleaseProvideAllTheRelevantInformation()
 {
     console.log("Missing information");
+}
+
+function OpenEditRecipeNameElement()
+{
+    addRecipeInformationContainerElement.empty();
+
+    let newInputElement = $("<input class='column is-6 is-offset-2' type='text' placeholder='Enter a name for your recipe' id='recipeNameInput'>");
+    let newButtonElement = $("<div class='column is-2 recipePageButton' id='editRecipeNameButton'>Add name</div>");
+
+    newButtonElement.click(ChangeRecipeName);
+    newInputElement.appendTo(addRecipeInformationContainerElement);
+    newButtonElement.appendTo(addRecipeInformationContainerElement);
+}
+
+function OpenAddIngredientElement()
+{
+    addRecipeInformationContainerElement.empty();
+
+    let newInputWeightElement = $("<input class='column is-2 is-offset-1' type='text' placeholder='Weight' id='ingredientWeightInput'>");
+    let newSelectElement = $("<div class='column is-1' id='ingredientUnitInput'>g</div>");
+
+    let newSelectionElements = $("<div class='hide' id='unitContainer'><div class='unit'>g</div><div class='unit'>kg</div><div class='unit'>ml</div><div class='unit'>l</div></div>");
+    newSelectionElements.appendTo(newSelectElement);
+    // $("#unitContainer").click(ChangeUnit);
+
+    //let newSelectElement = $("<select class='column is-1' name='units' id='ingredientUnitInput'><option value='g'>g</option><option value='kg'>kg</option><option value='ml'>ml</option><option value='l'>l</option></select>");
+    //let newSelectElement = $("<div class='select is-rounded column is-1' name='units' id='ingredientUnitInput'><select><option value='g'>g</option><option value='kg'>kg</option><option value='ml'>ml</option><option value='l'>l</option></select></div>");
+    let newInputNameElement = $("<input class='column is-5' type='text' placeholder='Ingredient name' id='ingredientNameInput'>");
+    let newButtonElement = $("<div class='column is-2 recipePageButton' id='addInstructionButton'>Add Ingredient</div>");
+
+    newSelectElement.click(ToggleUnitSelector);
+    newButtonElement.click(AddIngredient);
+    newInputWeightElement.appendTo(addRecipeInformationContainerElement);
+    newSelectElement.appendTo(addRecipeInformationContainerElement);
+    newInputNameElement.appendTo(addRecipeInformationContainerElement);
+    newButtonElement.appendTo(addRecipeInformationContainerElement);
+}
+
+function OpenAddInstructionElement()
+{
+    addRecipeInformationContainerElement.empty();
+
+    let newInputElement = $("<input class='column is-6 is-offset-2' type='text' placeholder='Enter instruction' id='instructionInput'>");
+    let newButtonElement = $("<div class='column is-2 recipePageButton' id='addInstructionButton'>Add Instruction</div>");
+
+    newButtonElement.click(AddInstruction);
+    newInputElement.appendTo(addRecipeInformationContainerElement);
+    newButtonElement.appendTo(addRecipeInformationContainerElement);
+}
+
+function ToggleUnitSelector(event)
+{
+    let selectionElement = $("#unitContainer");
+    
+    if (selectionElement.hasClass("hide"))
+    {
+        selectionElement.removeClass("hide");
+        selectionElement.addClass("show");
+    }
+    else
+    {
+        selectionElement.removeClass("show");
+        selectionElement.addClass("hide");
+
+        if (event.target !== this) ChangeUnit(event);
+    }
+}
+
+function ChangeUnit(event)
+{
+    $("#ingredientUnitInput").text($(event.target).text());
+    //For some damn reason the children of the #ingredientUnitInput keep getting deleted whenever the event is triggered, and I couldn't figure out why so I just make them again
+    let newSelectionElements = $("<div class='hide' id='unitContainer'><div class='unit'>g</div><div class='unit'>kg</div><div class='unit'>ml</div><div class='unit'>l</div></div>");
+    newSelectionElements.appendTo($("#ingredientUnitInput"));
 }
 
 function RemoveSpacesFromString(str) { return str.replace(/[\s]/g, ''); }

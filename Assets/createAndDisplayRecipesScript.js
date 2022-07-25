@@ -39,6 +39,7 @@ class Recipe
 class Ingredient
 {
     woolworthsProducts = [];
+    ingredientDisplayQuantity;
 
     constructor(ingredientName, ingredientQuantity, ingredientUnits)
     {
@@ -126,14 +127,16 @@ function AddFruitAndVegetableWeightsToArray()
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("garlic", 5));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("green bean", 5));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("beet", 113));
-    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("bell pepper", 170));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("broccoli", 225));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("brussel sprout", 14));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cabbage", 750));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("capsicum", 170));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("bell pepper", 170));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("red pepper", 170));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("green pepper", 170));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("carrot", 60));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cauliflower", 500));
-    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("celery", 450));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("celery", 100));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("corn", 180));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cucumber", 250));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("kale", 198));
@@ -150,8 +153,8 @@ function AddFruitAndVegetableWeightsToArray()
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("butternut", 1100));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("sweet potato", 113));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("sweet potatoe", 113));
-    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("tomato", 170));
-    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("tomatoe", 170));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("tomato", 150));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("tomatoe", 150));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("zucchini", 200));
 }
 //#endregion
@@ -335,7 +338,10 @@ function ConvertOnlineIngredientsIntoUserIngredients(recipeData)
             ingredientQuantity = ConvertWeightIntoGramsOrML(ingredientQuantity, ingredientUnits);
             ingredientUnits = GramsOrML(ingredientUnits);
 
-            ingredientArray.push(new Ingredient(ingredientName, parseFloat(ingredientQuantity), ingredientUnits));
+            let newIngredient = new Ingredient(ingredientName, parseFloat(ingredientQuantity), ingredientUnits)
+            newIngredient.ingredientDisplayQuantity = recipeData.meals[0][measurement];
+
+            ingredientArray.push(newIngredient);
         }
     }
 
@@ -353,11 +359,11 @@ function ParseOnlineRecipeIngredientUnitAndQuantity(quantityAndUnits, ingredient
     let numbers = 0;
     if (quantityAndUnitsLowercase.includes("/")) 
     {
-        numbers = quantityAndUnitsLowercase.replace(/[^0-9/]/g, '');
+        numbers = quantityAndUnitsLowercase.replace(/[^0-9/.]/g, '');
         let numbersSplit = numbers.split("/");
         numbers = parseFloat(numbersSplit[0] / numbersSplit[1]);
     }
-    else numbers = parseFloat(quantityAndUnitsLowercase.replace(/[^0-9]/g, ''));
+    else numbers = parseFloat(quantityAndUnitsLowercase.replace(/[^0-9.]/g, ''));
     let letters = quantityAndUnitsLowercase.replace(/[^a-z]/g, '');
     let quantityAndUnitsParsed = [0, ""];
 
@@ -508,7 +514,7 @@ function QueryWoolworthsAPI(ingredientUrl, ingredient, displayIngredientOnComple
                 //console.log(apiResponseData);
                 RemoveFetchNameFromOutstandingList(fetchName);
                 if (apiResponseData.Products != null) ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData, ingredient, displayIngredientOnCompletion);
-                else IngredientNotFound(ingredient);
+                //else IngredientNotFound(ingredient);
             });
         }
     });
@@ -752,11 +758,13 @@ function DisplayIngredient(ingredient)
     let ingredientListItemElement = $("<li></li>");
 
     let ingredientContainerElement = $("<div class='columns'></div>");
-    let ingredientQuantityElement = $("<div class='column is-1 is-offset-3 ingredientUnit'>" + ingredient.ingredientQuantity + ingredient.ingredientUnits + "</div>");
+    let ingredientQuantityElement
+    if (ingredient.ingredientDisplayQuantity == undefined) ingredientQuantityElement = $("<div class='column is-4 ingredientUnit'>" + ingredient.ingredientQuantity + ingredient.ingredientUnits + "</div>");
+    else ingredientQuantityElement = $("<div class='column is-4 ingredientUnit'>" + ingredient.ingredientDisplayQuantity + "</div>");
     let ingredientNameElement = $("<div class='column is-4'>" + CapitaliseFirstLetterOfString(ingredient.ingredientName) + "</div>");
 
     let ingredientMeanPriceElement;
-    if (ingredient.woolworthsProducts.length > 0) ingredientMeanPriceElement = $("<div class='column is-5 meanPrice ingredientPrice'>Price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<div/>");
+    if (ingredient.woolworthsProducts.length > 0) ingredientMeanPriceElement = $("<div class='column is-4 meanPrice ingredientPrice'>Price: $" + (ingredient.meanPrice * ingredient.ingredientQuantity).toFixed(2) + "<div/>");
     else ingredientMeanPriceElement = $("<div class='column is-5 meanPrice ingredientPrice'>No matching products found<div/>");
 
     ingredientQuantityElement.appendTo(ingredientContainerElement);

@@ -258,6 +258,16 @@ input
     padding-top: 5%;
 }
 
+.ingredientUnit
+{
+    text-align: right;
+}
+
+.ingredientPrice
+{
+    text-align: left;
+}
+
 @media screen and (max-width: 768px)
 {
     h1
@@ -283,5 +293,10 @@ input
     .categoryContainer
     {
         padding: 2% 5% 2% 5%;
+    }
+
+    .ingredientUnit, .ingredientPrice
+    {
+        text-align: center;
     }
 }

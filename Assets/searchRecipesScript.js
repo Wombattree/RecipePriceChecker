@@ -65,7 +65,7 @@ function ListCategories(data)
             if (categoriesCreated < data.meals.length)
             {
                 let offset = (j === 0 && i === categoryRows - 1) ? "is-offset-" + (categories - (categoryRows - 1) * categoriesPerRow + 2) : "";
-                let newCategoryElement = $("<div data-category='" + data.meals[categoriesCreated].strCategory + "' class='column is-2 " + offset + " loadRecipeButton'>" + data.meals[categoriesCreated].strCategory + "</div>");
+                let newCategoryElement = $("<div data-category='" + data.meals[categoriesCreated].strCategory + "' class='column is-2 " + offset + " standardButton'>" + data.meals[categoriesCreated].strCategory + "</div>");
                 $(newCategoryElement).click(SearchByCategoryButtonPressed);
                 newCategoryElement.appendTo(newRowElement);
                 categoriesCreated++;
@@ -91,7 +91,7 @@ function ListRecipesInCategory(data)
         {
             if (recipesCreated < recipes)
             {
-                let newRecipeContainerElement = $("<div data-recipeid='" + data.meals[recipesCreated].idMeal + "' class='column is-2 loadRecipeButton'></div>");
+                let newRecipeContainerElement = $("<div data-recipeid='" + data.meals[recipesCreated].idMeal + "' class='column is-2 standardButton'></div>");
                 let newMealElement = $("<div data-recipeid='" + data.meals[recipesCreated].idMeal + "'>" + data.meals[recipesCreated].strMeal + "</div>");
                 let newMealElementImage = $("<image data-recipeid='" + data.meals[recipesCreated].idMeal + "' class='previewImageWithLink' src='" + data.meals[recipesCreated].strMealThumb + "' alt='Recipe preview image'>");
 
@@ -179,7 +179,7 @@ function DisplayUserRecipes()
         {
             if (recipesCreated < recipes)
             {
-                let newUserRecipeDisplay = $("<li class='column is-2 loadRecipeButton' data-recipename=" + userRecipes[recipesCreated].recipeSearchName + ">" + userRecipes[recipesCreated].recipeName + "</li>");
+                let newUserRecipeDisplay = $("<li class='column is-2 standardButton' data-recipename=" + userRecipes[recipesCreated].recipeSearchName + ">" + userRecipes[recipesCreated].recipeName + "</li>");
                 newUserRecipeDisplay.click(GoToUserRecipe);
                 newUserRecipeDisplay.appendTo(newRowElement);
                 recipesCreated++;

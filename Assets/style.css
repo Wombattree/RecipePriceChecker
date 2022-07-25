@@ -48,6 +48,12 @@ html
     font-size: 20px;
 }
 
+h1
+{
+    font-size: 80px;
+    font-weight: bolder;
+}
+
 header
 {
     padding: 2% 5% 3% 5%;
@@ -68,12 +74,6 @@ header p
 .text a
 {
     color: var(--fontColour);
-}
-
-h1
-{
-    font-size: 80px;
-    font-weight: bolder;
 }
 
 #bodyContentContainer
@@ -116,6 +116,22 @@ h1
     padding-bottom: 10%;
 }
 
+/*#region Buttons*/
+.standardButton, .navBarButtonMainPage
+{
+    cursor: pointer;
+    user-select: none;
+    padding: 1%;
+
+    border-radius: var(--borderRadiusButton);
+    background-color: var(--backgroundColour);
+}
+
+.standardButton:hover, .navBarButtonMainPage:hover
+{
+    background-color: var(--hoverColour);
+}
+
 .navBarButtonMainPage
 {
     font-size: 25px;
@@ -123,11 +139,17 @@ h1
     margin: 1% 25% 1% 25%;
 }
 
-.navBarButton
+.standardButton
 {
-    font-size: 15px;
+    font-size: 20px;
     border: 3px;
 }
+
+#saveRecipeButton, #deleteRecipeButton
+{
+    margin: 0% 25% 0% 25%;
+}
+/*#endregion*/
 
 #recipeName
 {
@@ -226,37 +248,40 @@ input
     padding: 0.5% 0% 0.5% 0%;
 }
 
-.navBarButtonMainPage, .navBarButton, .loadRecipeButton, .recipePageButton
-{
-    cursor: pointer;
-    user-select: none;
-    padding: 1%;
-
-    border-radius: var(--borderRadiusButton);
-    background-color: var(--backgroundColour);
-}
-
-.navBarButtonMainPage:hover, .navBarButton:hover, .loadRecipeButton:hover, .recipePageButton:hover
-{
-    background-color: var(--hoverColour);
-}
-
 .categoryTitle
 {
     font-size: var(--categoryTitleFontSize);
 }
 
-.loadRecipeButton, .recipePageButton
-{
-    border: none;
-}
-
-#saveRecipeButton
-{
-    margin: 0% 35% 0% 35%;
-}
-
 #onlineRecipesPreviewContainer
 {
     padding-top: 5%;
+}
+
+@media screen and (max-width: 768px)
+{
+    h1
+    {
+        font-size: 60px;
+    }
+
+    header p
+    {
+        font-size: 30px;
+    }
+
+    .navBarButtonMainPage
+    {
+        margin: 1% 10% 1% 10%;
+    }
+
+    #saveRecipeButton, #deleteRecipeButton
+    {
+        margin: 0% 10% 0% 10%;
+    }
+
+    .categoryContainer
+    {
+        padding: 2% 5% 2% 5%;
+    }
 }

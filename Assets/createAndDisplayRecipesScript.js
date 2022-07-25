@@ -1,15 +1,9 @@
+//#region -- Variables and Constants --
+var recipeNameDisplayElement = $("#recipeName");
+var approximateCostElement = $("#approximateCost");
+var addRecipeInformationContainerElement = $("#addRecipeInformationContainer");
 var ingredientInformationListElement = $("#ingredientInformation");
 var instructionInformationListElement = $("#instructionInformation");
-
-var recipeNameDisplayElement = $("#recipeName");
-
-var approximateCostElement = $("#approximateCost");
-
-var addRecipeInformationContainerElement = $("#addRecipeInformationContainer");
-var editRecipeNameContainerElement = $("#editRecipeNameContainer");
-var addIngredientContainerElement = $("#addIngredientContainer");
-var addInstructionContainerElement = $("#addInstructionContainer");
-var displayedOption;
 
 const localStorageStringForLoadingUserRecipe = "RecipePriceChecker_LoadUserRecipe";
 const localStorageStringForLoadingOnlineRecipe = "RecipePriceChecker_LoadOnlineRecipe";
@@ -21,6 +15,7 @@ var outstandingFetchRequests = [];
 var fruitAndVegWeights = [];
 var recipes = [];
 var currentRecipe;
+//#endregion
 
 //#region -- Class Declarations --
 class Recipe
@@ -97,6 +92,8 @@ function AddFruitAndVegetableWeightsToArray()
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("banana", 120));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("blackberry", 2.45));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("blueberry", 0.5));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cherry", 5));
+    fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cherrie", 5));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cherries", 5));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("coconut", 680));
     fruitAndVegWeights.push(new FruitAndVegetableWeightObject("cranberry", 1.13));
@@ -159,6 +156,7 @@ function AddFruitAndVegetableWeightsToArray()
 }
 //#endregion
 
+//#region -- Initialisation --
 function Init()
 {
     AddFruitAndVegetableWeightsToArray();
@@ -172,6 +170,7 @@ function Init()
 function InitialiseButtons()
 {
     $("#saveRecipeButton").click(SaveRecipe);
+    $("#deleteRecipeButton").click(DeleteRecipe);
 
     $("#displayEditRecipeNameButton").click(OpenEditRecipeNameElement);
     $("#displayAddIngredientButton").click(OpenAddIngredientElement);
@@ -179,17 +178,26 @@ function InitialiseButtons()
     $("#createNewRecipeButton").click(CreateUserRecipe);
 }
 
-function CheckRecipeStatus()
+function ResetRecipePage()
 {
-    if (localStorage.getItem(localStorageStringForLoadingUserRecipe) !== null) return "LoadUserRecipe";
-    if (localStorage.getItem(localStorageStringForLoadingOnlineRecipe) !== null) return "LoadOnlineRecipe";
-    return "LoadNothing";
+    ingredientInformationListElement.empty();
+    instructionInformationListElement.empty();
+    recipeNameDisplayElement.text(recipeNameDefault);
 }
 
 function ResetRecipeStatus()
 {
     localStorage.removeItem(localStorageStringForLoadingUserRecipe);
     localStorage.removeItem(localStorageStringForLoadingOnlineRecipe);
+}
+//#endregion
+
+//#region -- Check what the page should do --
+function CheckRecipeStatus()
+{
+    if (localStorage.getItem(localStorageStringForLoadingUserRecipe) !== null) return "LoadUserRecipe";
+    if (localStorage.getItem(localStorageStringForLoadingOnlineRecipe) !== null) return "LoadOnlineRecipe";
+    return "LoadNothing";
 }
 
 function ProcessPageStatus(pageStatus)
@@ -202,14 +210,9 @@ function ProcessPageStatus(pageStatus)
         default: console.log("How did this happen??"); break;
     }
 }
+//#endregion
 
-function ResetRecipePage()
-{
-    ingredientInformationListElement.empty();
-    instructionInformationListElement.empty();
-    recipeNameDisplayElement.text(recipeNameDefault);
-}
-
+//#region -- Load User Recipes --
 function LoadAllUserRecipes()
 {
     let savedRecipes = JSON.parse(localStorage.getItem(localStorageStringForSavingUserRecipes));
@@ -240,12 +243,9 @@ function LoadSpecificUserRecipe()
     }
     else RecipeNotFound(nameOfRecipeToLoad);
 }
+//#endregion
 
-function RecipeNotFound(nameOfRecipeToLoad)
-{
-    console.log("Recipe not found: " + nameOfRecipeToLoad);
-}
-
+//#region -- Load Online Recipes -- 
 function LoadOnlineRecipe()
 {
     console.log("Loading online recipe");
@@ -254,11 +254,6 @@ function LoadOnlineRecipe()
     console.log(apiUrlOfRecipeToLoad);
     if (apiUrlOfRecipeToLoad !== null) QueryAPIForOnlineRecipes(apiUrlOfRecipeToLoad);
     else ApiUrlNotFound(apiUrlOfRecipeToLoad);
-}
-
-function ApiUrlNotFound(apiUrlOfRecipeToLoad)
-{
-    console.log("Api Url not found: " + apiUrlOfRecipeToLoad);
 }
 
 function QueryAPIForOnlineRecipes(apiUrlOfRecipeToLoad)
@@ -312,14 +307,12 @@ function CheckIfFetchIsFinished()
     }
 }
 
-function GetEstimatedCostOfRecipe(recipe)
+function RemoveFetchNameFromOutstandingList(fetchName)
 {
-    let cost = 0;
-    for (let i = 0; i < recipe.ingredients.length; i++) 
+    for (let i = 0; i < outstandingFetchRequests.length; i++) 
     {
-        if (isNaN(recipe.ingredients.meanPrice) === false) cost += recipe.ingredients.meanPrice;
+        if (outstandingFetchRequests[i] === fetchName) outstandingFetchRequests.splice(i, 1);
     }
-    return cost;
 }
 
 function ConvertOnlineIngredientsIntoUserIngredients(recipeData)
@@ -483,7 +476,9 @@ function IsOtherMeasure(str)
         default: return null;
     }
 }
+//#endregion
 
+//#region -- Get Information From Woolworthe --
 function SearchWoolworthsApiForIngredient(ingredient)
 {
     QueryWoolworthsAPI(GetIngredientUrl(GetUrlName(ingredient.ingredientName)), ingredient, false);
@@ -517,14 +512,6 @@ function QueryWoolworthsAPI(ingredientUrl, ingredient, displayIngredientOnComple
             });
         }
     });
-}
-
-function RemoveFetchNameFromOutstandingList(fetchName)
-{
-    for (let i = 0; i < outstandingFetchRequests.length; i++) 
-    {
-        if (outstandingFetchRequests[i] === fetchName) outstandingFetchRequests.splice(i, 1);
-    }
 }
 
 function ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData, ingredient, displayIngredientOnCompletion)
@@ -591,11 +578,6 @@ function ConvertWoolworthsApiResponseIntoAWoolworthsProductClass(apiResponseData
         }
     }
     else { NoUsableProductsWereFound(ingredient.ingredientName); return null; }
-}
-
-function IngredientNotFound()
-{
-
 }
 
 function GetProductUnitType(productSize)
@@ -676,7 +658,9 @@ function NormalisePrice(originalWeight, originalUnits, originalPrice)
     let productWeightInGramsOrML = ConvertWeightIntoGramsOrML(originalWeight, originalUnits);
     return originalPrice / productWeightInGramsOrML;
 }
+//#endregion
 
+//#region -- Get Recipe Information --
 function GetIndexOfMinOrMaxPrice(isPriceMin, productArray)
 {
     let index = 0;
@@ -715,6 +699,16 @@ function GetMedianPrice(productArray)
     return parseFloat(productArray[middle].pricePerGramOrML);
 }
 
+function GetEstimatedCostOfRecipe(recipe)
+{
+    let cost = 0;
+    for (let i = 0; i < recipe.ingredients.length; i++) 
+    {
+        if (isNaN(recipe.ingredients.meanPrice) === false) cost += recipe.ingredients.meanPrice;
+    }
+    return cost;
+}
+
 function BubbleSortPrices(array)
 {
     for (let i = 0; i < array.length; i++) 
@@ -730,11 +724,19 @@ function BubbleSortPrices(array)
     return array;
 }
 
-function NoUsableProductsWereFound(productName)
+function UpdateRecipeCost(recipe)
 {
-    console.log("We couldn't find enough products that match the requirements for " + productName + ". We apologise for the inconvenience.");
+    let cost = 0;
+    for (let i = 0; i < recipe.ingredients.length; i++)
+    {
+        if (isNaN(recipe.ingredients[i].meanPrice) === false) cost += (recipe.ingredients[i].meanPrice * recipe.ingredients[i].ingredientQuantity);
+        else console.log(recipe.ingredients[i].ingredientName + "'s mean price is NaN.");
+    }
+    recipe.estimatedCost = cost;
 }
+//#endregion
 
+//#region -- Display Recipe --
 function DisplayRecipe(recipeToDisplay)
 {
     recipeNameDisplayElement.text(recipeToDisplay.recipeName);
@@ -771,22 +773,13 @@ function DisplayInstruction(instruction)
     instructionElement.appendTo(instructionInformationListElement);
 }
 
-function UpdateRecipeCost(recipe)
-{
-    let cost = 0;
-    for (let i = 0; i < recipe.ingredients.length; i++)
-    {
-        if (isNaN(recipe.ingredients[i].meanPrice) === false) cost += (recipe.ingredients[i].meanPrice * recipe.ingredients[i].ingredientQuantity);
-        else console.log(recipe.ingredients[i].ingredientName + "'s mean price is NaN.");
-    }
-    recipe.estimatedCost = cost;
-}
-
 function DisplayEstimatedCost(recipe)
 {
     approximateCostElement.text("Estimated total cost: $" + (parseFloat(recipe.estimatedCost)).toFixed(2));
 }
+//#endregion
 
+//#region -- Update Recipe Information --
 function CreateUserRecipe()
 {
     ResetRecipePage();
@@ -858,50 +851,12 @@ function AddInstruction()
     }
 }
 
-function SaveRecipe()
-{
-    if (currentRecipe.recipeName != null && currentRecipe.recipeName.length > 0)
-    {
-        recipes.push(currentRecipe);
-        localStorage.setItem(localStorageStringForSavingUserRecipes, JSON.stringify(recipes));
-    }
-    else PleaseEnterAName();
-}
-
-function PleaseEnterAName()
-{
-    console.log("Please enter a name for the recipe");
-}
-
-function GetSanitisedName(initialName)
-{
-    let name = initialName.toLowerCase();
-    //Remove everything that isn't a letter or a space
-    name.replace(/[^a-z-' \s]/g, '');
-    //Capitalise the first letter
-    name.charAt(0).toUpperCase() + name.slice(1);
-
-    return name;
-}
-
-function GetUrlFriendlyName(str) 
-{ 
-    let name = str.toLowerCase();
-    name = name.replace(/[^a-z \s]/g, '');
-    return name.replace(/[\s]/g, "%20"); 
-}
-
-function PleaseProvideAllTheRelevantInformation()
-{
-    console.log("Missing information");
-}
-
 function OpenEditRecipeNameElement()
 {
     addRecipeInformationContainerElement.empty();
 
     let newInputElement = $("<input class='column is-6 is-offset-2' type='text' placeholder='Enter a name for your recipe' id='recipeNameInput'>");
-    let newButtonElement = $("<div class='column is-2 recipePageButton' id='editRecipeNameButton'>Add name</div>");
+    let newButtonElement = $("<div class='column is-2 standardButton' id='editRecipeNameButton'>Add name</div>");
 
     newButtonElement.click(ChangeRecipeName);
     newInputElement.appendTo(addRecipeInformationContainerElement);
@@ -917,12 +872,9 @@ function OpenAddIngredientElement()
 
     let newSelectionElements = $("<div class='hide' id='unitContainer'><div class='unit'>g</div><div class='unit'>kg</div><div class='unit'>ml</div><div class='unit'>l</div></div>");
     newSelectionElements.appendTo(newSelectElement);
-    // $("#unitContainer").click(ChangeUnit);
 
-    //let newSelectElement = $("<select class='column is-1' name='units' id='ingredientUnitInput'><option value='g'>g</option><option value='kg'>kg</option><option value='ml'>ml</option><option value='l'>l</option></select>");
-    //let newSelectElement = $("<div class='select is-rounded column is-1' name='units' id='ingredientUnitInput'><select><option value='g'>g</option><option value='kg'>kg</option><option value='ml'>ml</option><option value='l'>l</option></select></div>");
     let newInputNameElement = $("<input class='column is-5' type='text' placeholder='Ingredient name' id='ingredientNameInput'>");
-    let newButtonElement = $("<div class='column is-2 recipePageButton' id='addInstructionButton'>Add Ingredient</div>");
+    let newButtonElement = $("<div class='column is-2 standardButton' id='addInstructionButton'>Add Ingredient</div>");
 
     newSelectElement.click(ToggleUnitSelector);
     newButtonElement.click(AddIngredient);
@@ -937,7 +889,7 @@ function OpenAddInstructionElement()
     addRecipeInformationContainerElement.empty();
 
     let newInputElement = $("<input class='column is-6 is-offset-2' type='text' placeholder='Enter instruction' id='instructionInput'>");
-    let newButtonElement = $("<div class='column is-2 recipePageButton' id='addInstructionButton'>Add Instruction</div>");
+    let newButtonElement = $("<div class='column is-2 standardButton' id='addInstructionButton'>Add Instruction</div>");
 
     newButtonElement.click(AddInstruction);
     newInputElement.appendTo(addRecipeInformationContainerElement);
@@ -969,9 +921,100 @@ function ChangeUnit(event)
     let newSelectionElements = $("<div class='hide' id='unitContainer'><div class='unit'>g</div><div class='unit'>kg</div><div class='unit'>ml</div><div class='unit'>l</div></div>");
     newSelectionElements.appendTo($("#ingredientUnitInput"));
 }
+//#endregion
+
+//#region -- Saving And Loading --
+function SaveRecipe()
+{
+    if (currentRecipe.recipeName != null && currentRecipe.recipeName.length > 0)
+    {
+        let existingRecipeIndex = DoesRecipeAlreadyExist();
+        if (existingRecipeIndex !== null) ReplaceExistingRecipe(existingRecipeIndex);
+        recipes.push(currentRecipe);
+        localStorage.setItem(localStorageStringForSavingUserRecipes, JSON.stringify(recipes));
+    }
+    else PleaseEnterAName();
+}
+
+function DoesRecipeAlreadyExist()
+{
+    for (let i = 0; i < recipes.length; i++)
+    {
+        if (currentRecipe.recipeName === recipes[i].recipeName) return i;
+    }
+    return null;
+}
+
+function ReplaceExistingRecipe(index)
+{
+    recipes.splice(index, 1);
+}
+
+function DeleteRecipe()
+{
+    if (currentRecipe.recipeName != null && currentRecipe.recipeName.length > 0)
+    {
+        let index = recipes.indexOf(currentRecipe);
+        if (index !== -1)
+        {
+            recipes.splice(index, 1);
+            localStorage.setItem(localStorageStringForSavingUserRecipes, JSON.stringify(recipes));
+        }
+        CreateUserRecipe();
+    }
+    else PleaseEnterAName();
+}
+//#endregion
+
+//#region -- Errors --
+function RecipeNotFound(nameOfRecipeToLoad)
+{
+    console.log("Recipe not found: " + nameOfRecipeToLoad);
+}
+
+function ApiUrlNotFound(apiUrlOfRecipeToLoad)
+{
+    console.log("Api Url not found: " + apiUrlOfRecipeToLoad);
+}
+
+function NoUsableProductsWereFound(productName)
+{
+    console.log("We couldn't find enough products that match the requirements for " + productName + ". We apologise for the inconvenience.");
+}
+
+function PleaseEnterAName()
+{
+    console.log("Please enter a name for the recipe");
+}
+
+function PleaseProvideAllTheRelevantInformation()
+{
+    console.log("Missing information");
+}
+//#endregion
+
+//#region -- String Manipulation --
+function GetSanitisedName(initialName)
+{
+    let name = initialName.toLowerCase();
+    //Remove everything that isn't a letter or a space
+    name.replace(/[^a-z-' \s]/g, '');
+    //Capitalise the first letter
+    name.charAt(0).toUpperCase() + name.slice(1);
+
+    return name;
+}
+
+function GetUrlFriendlyName(str) 
+{ 
+    let name = str.toLowerCase();
+    name = name.replace(/[^a-z \s]/g, '');
+    return name.replace(/[\s]/g, "%20"); 
+}
 
 function RemoveSpacesFromString(str) { return str.replace(/[\s]/g, ''); }
 function CapitaliseFirstLetterOfString(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 function RemoveEverythingFromStringExceptLettersSpacesHyphensAndApostrophes(str) { return str.replace(/[^a-zA-Z-' \s]/g, ''); }
+//#endregion
 
 Init();
